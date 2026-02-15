@@ -1,0 +1,293 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import ImageUpload from "@/components/ImageUpload";
+
+interface Jaciment {
+  id: string;
+  name: string;
+}
+
+export default function UEForm({ editId }: { editId?: string }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [jaciments, setJaciments] = useState<Jaciment[]>([]);
+  
+  const [jacimentId, setJacimentId] = useState("");
+  const [codiUe, setCodiUe] = useState("");
+  const [campanya, setCampanya] = useState("");
+  const [termeMunicipal, setTermeMunicipal] = useState("");
+  const [comarca, setComarca] = useState("");
+  const [zona, setZona] = useState("");
+  const [sector, setSector] = useState("");
+  const [ambit, setAmbit] = useState("");
+  const [fet, setFet] = useState("");
+  const [descripcio, setDescripcio] = useState("");
+  const [color, setColor] = useState("");
+  const [consistencia, setConsistencia] = useState("");
+  const [igualA, setIgualA] = useState("");
+  const [tallatPer, setTallatPer] = useState("");
+  const [esRecolzaA, setEsRecolzaA] = useState("");
+  const [seLiRecolza, setSeLiRecolza] = useState("");
+  const [talla, setTalla] = useState("");
+  const [reomplertPer, setReomplertPer] = useState("");
+  const [cobertPer, setCobertPer] = useState("");
+  const [reompleA, setReompleA] = useState("");
+  const [cobreixA, setCobreixA] = useState("");
+  const [interpretacio, setInterpretacio] = useState("");
+  const [cronologia, setCronologia] = useState("");
+  const [criteri, setCriteri] = useState("");
+  const [materials, setMaterials] = useState("");
+  const [planta, setPlanta] = useState("");
+  const [seccio, setSeccio] = useState("");
+  const [fotografia, setFotografia] = useState("");
+  const [sediment, setSediment] = useState("");
+  const [carpologia, setCarpologia] = useState("");
+  const [antracologia, setAntracologia] = useState("");
+  const [fauna, setFauna] = useState("");
+  const [metalls, setMetalls] = useState("");
+  const [observacions, setObservacions] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [visibility, setVisibility] = useState<string>("public");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+
+  useEffect(() => {
+    supabase.from("jaciments").select("id, name").then(({ data }) => {
+      if (data) setJaciments(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (editId) {
+      supabase.from("ues").select("*").eq("id", editId).single().then(({ data }) => {
+        if (data) {
+          setJacimentId(data.jaciment_id);
+          setCodiUe(data.codi_ue || "");
+          setCampanya(data.campanya || "");
+          setTermeMunicipal(data.terme_municipal || "");
+          setComarca(data.comarca || "");
+          setZona(data.zona || "");
+          setSector(data.sector || "");
+          setAmbit(data.ambit || "");
+          setFet(data.fet || "");
+          setDescripcio(data.descripcio || "");
+          setColor(data.color || "");
+          setConsistencia(data.consistencia || "");
+          setIgualA(data.igual_a || "");
+          setTallatPer(data.tallat_per || "");
+          setEsRecolzaA(data.es_recolza_a || "");
+          setSeLiRecolza(data.se_li_recolza || "");
+          setTalla(data.talla || "");
+          setReomplertPer(data.reomplert_per || "");
+          setCobertPer(data.cobert_per || "");
+          setReompleA(data.reomple_a || "");
+          setCobreixA(data.cobreix_a || "");
+          setInterpretacio(data.interpretacio || "");
+          setCronologia(data.cronologia || "");
+          setCriteri(data.criteri || "");
+          setMaterials(data.materials || "");
+          setPlanta(data.planta || "");
+          setSeccio(data.seccio || "");
+          setFotografia(data.fotografia || "");
+          setSediment(data.sediment || "");
+          setCarpologia(data.carpologia || "");
+          setAntracologia(data.antracologia || "");
+          setFauna(data.fauna || "");
+          setMetalls(data.metalls || "");
+          setObservacions(data.observacions || "");
+          setImageUrl(data.image_url || "");
+          setVisibility(data.visibility);
+          setLatitude(data.latitude);
+          setLongitude(data.longitude);
+        }
+      });
+    }
+  }, [editId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !jacimentId) {
+      toast.error("Selecciona un jaciment");
+      return;
+    }
+    setLoading(true);
+
+    const payload = {
+      jaciment_id: jacimentId,
+      codi_ue: codiUe,
+      campanya,
+      terme_municipal: termeMunicipal,
+      comarca,
+      zona,
+      sector,
+      ambit,
+      fet,
+      descripcio,
+      color,
+      consistencia,
+      igual_a: igualA,
+      tallat_per: tallatPer,
+      es_recolza_a: esRecolzaA,
+      se_li_recolza: seLiRecolza,
+      talla,
+      reomplert_per: reomplertPer,
+      cobert_per: cobertPer,
+      reomple_a: reompleA,
+      cobreix_a: cobreixA,
+      interpretacio,
+      cronologia,
+      criteri,
+      materials,
+      planta,
+      seccio,
+      fotografia,
+      sediment,
+      carpologia,
+      antracologia,
+      fauna,
+      metalls,
+      observacions,
+      image_url: imageUrl,
+      visibility: visibility as any,
+      latitude,
+      longitude,
+      created_by: user.id,
+    };
+
+    let error;
+    if (editId) {
+      ({ error } = await supabase.from("ues").update(payload).eq("id", editId));
+    } else {
+      ({ error } = await supabase.from("ues").insert(payload));
+    }
+
+    if (error) toast.error(error.message);
+    else {
+      toast.success(editId ? "UE actualitzada!" : "UE creada!");
+      navigate(-1);
+    }
+    setLoading(false);
+  };
+
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="space-y-3">
+      <h3 className="font-serif text-lg font-semibold text-primary border-b border-border pb-1">{title}</h3>
+      {children}
+    </div>
+  );
+
+  const Field = ({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) => (
+    <div>
+      <Label>{label}</Label>
+      {textarea ? (
+        <Textarea value={value} onChange={(e) => onChange(e.target.value)} />
+      ) : (
+        <Input value={value} onChange={(e) => onChange(e.target.value)} />
+      )}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-serif font-bold">{editId ? "Editar" : "Nova"} Unitat Estratigràfica</h1>
+      </header>
+
+      <form onSubmit={handleSubmit} className="p-4 space-y-6 pb-24 animate-fade-in">
+        <Section title="Dades identificatives">
+          <div>
+            <Label>Jaciment *</Label>
+            <Select value={jacimentId} onValueChange={setJacimentId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un jaciment" /></SelectTrigger>
+              <SelectContent>
+                {jaciments.map((j) => (
+                  <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Field label="Codi UE" value={codiUe} onChange={setCodiUe} />
+          <Field label="Campanya" value={campanya} onChange={setCampanya} />
+          <Field label="Terme municipal" value={termeMunicipal} onChange={setTermeMunicipal} />
+          <Field label="Comarca" value={comarca} onChange={setComarca} />
+          <Field label="Zona" value={zona} onChange={setZona} />
+          <Field label="Sector" value={sector} onChange={setSector} />
+          <Field label="Àmbit" value={ambit} onChange={setAmbit} />
+        </Section>
+
+        <Section title="Descripció">
+          <Field label="FET" value={fet} onChange={setFet} />
+          <Field label="Descripció" value={descripcio} onChange={setDescripcio} textarea />
+          <Field label="Color" value={color} onChange={setColor} />
+          <Field label="Consistència" value={consistencia} onChange={setConsistencia} />
+        </Section>
+
+        <Section title="Relacions estratigràfiques">
+          <Field label="Igual a" value={igualA} onChange={setIgualA} />
+          <Field label="Tallat per" value={tallatPer} onChange={setTallatPer} />
+          <Field label="Es recolza a" value={esRecolzaA} onChange={setEsRecolzaA} />
+          <Field label="Se li recolza" value={seLiRecolza} onChange={setSeLiRecolza} />
+          <Field label="Talla" value={talla} onChange={setTalla} />
+          <Field label="Reomplert per" value={reomplertPer} onChange={setReomplertPer} />
+          <Field label="Cobert per" value={cobertPer} onChange={setCobertPer} />
+          <Field label="Reomple a" value={reompleA} onChange={setReompleA} />
+          <Field label="Cobreix a" value={cobreixA} onChange={setCobreixA} />
+        </Section>
+
+        <Section title="Interpretació i datació">
+          <Field label="Interpretació" value={interpretacio} onChange={setInterpretacio} textarea />
+          <Field label="Cronologia" value={cronologia} onChange={setCronologia} />
+          <Field label="Criteri" value={criteri} onChange={setCriteri} />
+          <Field label="Materials" value={materials} onChange={setMaterials} textarea />
+        </Section>
+
+        <Section title="Documentació">
+          <Field label="Planta" value={planta} onChange={setPlanta} />
+          <Field label="Secció" value={seccio} onChange={setSeccio} />
+          <Field label="Fotografia" value={fotografia} onChange={setFotografia} />
+        </Section>
+
+        <Section title="Mostres">
+          <Field label="Sediment" value={sediment} onChange={setSediment} />
+          <Field label="Carpologia" value={carpologia} onChange={setCarpologia} />
+          <Field label="Antracologia" value={antracologia} onChange={setAntracologia} />
+          <Field label="Fauna" value={fauna} onChange={setFauna} />
+          <Field label="Metalls" value={metalls} onChange={setMetalls} />
+        </Section>
+
+        <Section title="Final">
+          <Field label="Observacions" value={observacions} onChange={setObservacions} textarea />
+          <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge (opcional)" folder="ues" />
+          <div>
+            <Label>Visibilitat</Label>
+            <Select value={visibility} onValueChange={setVisibility}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="public">Públic</SelectItem>
+                <SelectItem value="entitat">Només entitat</SelectItem>
+                <SelectItem value="esbos">Esbós</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </Section>
+
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Guardant..." : editId ? "Actualitzar" : "Crear UE"}
+        </Button>
+      </form>
+    </div>
+  );
+}

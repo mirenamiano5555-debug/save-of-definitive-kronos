@@ -1,0 +1,133 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import MapPicker from "@/components/MapPicker";
+import ImageUpload from "@/components/ImageUpload";
+
+export default function JacimentForm({ editId }: { editId?: string }) {
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [period, setPeriod] = useState("");
+  const [description, setDescription] = useState("");
+  const [visibility, setVisibility] = useState<string>("public");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [imageUrl, setImageUrl] = useState("");
+
+  useEffect(() => {
+    if (editId) {
+      supabase.from("jaciments").select("*").eq("id", editId).single().then(({ data }) => {
+        if (data) {
+          setName(data.name);
+          setPeriod(data.period || "");
+          setDescription(data.description || "");
+          setVisibility(data.visibility);
+          setLat(data.latitude);
+          setLng(data.longitude);
+          setImageUrl(data.image_url || "");
+        }
+      });
+    }
+  }, [editId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (profile?.role !== "cap") {
+      toast.error("Només els usuaris amb rol 'cap' poden crear jaciments");
+      return;
+    }
+    if (!imageUrl) {
+      toast.error("La imatge és obligatòria");
+      return;
+    }
+    setLoading(true);
+
+    const payload = {
+      name,
+      period,
+      description,
+      visibility: visibility as any,
+      latitude: lat,
+      longitude: lng,
+      image_url: imageUrl,
+      entity: profile?.entity || "",
+      created_by: user.id,
+    };
+
+    let error;
+    if (editId) {
+      ({ error } = await supabase.from("jaciments").update(payload).eq("id", editId));
+    } else {
+      ({ error } = await supabase.from("jaciments").insert(payload));
+    }
+
+    if (error) toast.error(error.message);
+    else {
+      toast.success(editId ? "Jaciment actualitzat!" : "Jaciment creat!");
+      navigate(-1);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-serif font-bold">{editId ? "Editar" : "Nou"} Jaciment</h1>
+      </header>
+
+      <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-24 animate-fade-in">
+        <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge del jaciment *" folder="jaciments" />
+
+        <div>
+          <Label>Nom del jaciment *</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} required />
+        </div>
+
+        <div>
+          <Label>Període històric</Label>
+          <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="p.ex. Romà, Medieval..." />
+        </div>
+
+        <div>
+          <Label>Descripció</Label>
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+
+        <div>
+          <Label>Ubicació</Label>
+          <MapPicker lat={lat} lng={lng} onLocationChange={(la, ln) => { setLat(la); setLng(ln); }} />
+        </div>
+
+        <div>
+          <Label>Visibilitat</Label>
+          <Select value={visibility} onValueChange={setVisibility}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="public">Públic</SelectItem>
+              <SelectItem value="entitat">Només entitat</SelectItem>
+              <SelectItem value="esbos">Esbós</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Guardant..." : editId ? "Actualitzar" : "Crear jaciment"}
+        </Button>
+      </form>
+    </div>
+  );
+}
