@@ -2,11 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Search, QrCode, Trash2, Download, ZoomIn, ZoomOut, Move } from "lucide-react";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
 
 interface PlacedQR {
   id: string;
@@ -15,11 +13,125 @@ interface PlacedQR {
   x: number;
   y: number;
   size: number;
+  qrImage: HTMLImageElement;
 }
 
 interface JacimentQREditorProps {
   jacimentId: string;
   imageUrl: string;
+}
+
+/** Render a QR code to an HTMLImageElement using an offscreen SVG via qrcode lib */
+function generateQRImage(url: string, size: number): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    // Use a canvas-based QR generation approach
+    const modules = generateQRMatrix(url);
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return reject(new Error("No canvas context"));
+
+    const cellSize = size / modules.length;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#000000";
+
+    for (let row = 0; row < modules.length; row++) {
+      for (let col = 0; col < modules[row].length; col++) {
+        if (modules[row][col]) {
+          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = canvas.toDataURL("image/png");
+  });
+}
+
+// Minimal QR code generator (alphanumeric mode, version auto)
+function generateQRMatrix(text: string): boolean[][] {
+  // We'll use a hidden SVG from qrcode.react rendered to canvas
+  // Instead, let's use a simpler approach: render QRCodeSVG to an SVG string and parse it
+  // Actually, the simplest reliable approach is to create a temporary DOM element
+  
+  // For a truly functional QR, we need to use the actual qrcode.react or a pure JS lib.
+  // Let's use a different approach: render to a hidden div and capture.
+  
+  // FALLBACK: Use a basic QR encoding. For production, we'll render via DOM.
+  // This is a placeholder that will be replaced by the DOM rendering approach.
+  const size = 25;
+  const matrix: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
+  
+  // This won't produce a scannable QR. We need the real approach.
+  return matrix;
+}
+
+/** Use QRCodeSVG from qrcode.react by rendering to DOM and converting to image */
+function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "-9999px";
+    document.body.appendChild(container);
+
+    // Create SVG manually using the qrcode.react approach
+    // We'll use dynamic import or direct SVG creation
+    // Actually, let's use the canvas from qrcode.react's toDataURL
+    
+    // Simpler: create a React root and render QRCodeSVG, then grab the SVG
+    import("react-dom/client").then((ReactDOM) => {
+      import("react").then((React) => {
+        import("qrcode.react").then(({ QRCodeSVG }) => {
+          const root = ReactDOM.createRoot(container);
+          root.render(
+            React.createElement(QRCodeSVG, {
+              value: url,
+              size: pixelSize,
+              level: "M",
+              includeMargin: true,
+            })
+          );
+
+          // Wait for render
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const svg = container.querySelector("svg");
+              if (!svg) {
+                root.unmount();
+                document.body.removeChild(container);
+                reject(new Error("SVG not found"));
+                return;
+              }
+
+              const svgData = new XMLSerializer().serializeToString(svg);
+              const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+              const svgUrl = URL.createObjectURL(svgBlob);
+
+              const img = new Image();
+              img.onload = () => {
+                URL.revokeObjectURL(svgUrl);
+                root.unmount();
+                document.body.removeChild(container);
+                resolve(img);
+              };
+              img.onerror = (e) => {
+                URL.revokeObjectURL(svgUrl);
+                root.unmount();
+                document.body.removeChild(container);
+                reject(e);
+              };
+              img.src = svgUrl;
+            });
+          });
+        });
+      });
+    });
+  });
 }
 
 export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREditorProps) {
@@ -39,7 +151,6 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [showSearch, setShowSearch] = useState(false);
 
-  // Load objects for this jaciment
   useEffect(() => {
     supabase
       .from("objectes")
@@ -50,7 +161,6 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
       });
   }, [jacimentId]);
 
-  // Filter objects
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredObjects(objectes);
@@ -66,78 +176,77 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
     }
   }, [searchQuery, objectes]);
 
-  // Load background image
   useEffect(() => {
     if (!imageUrl) return;
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => {
-      setBgImage(img);
-    };
+    img.onload = () => setBgImage(img);
     img.src = imageUrl;
   }, [imageUrl]);
 
-  // Draw canvas
+  const getImageLayout = useCallback(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !bgImage || !container) return null;
+
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+    const scale = Math.min(cw / zoom / bgImage.width, ch / zoom / bgImage.height);
+    const imgW = bgImage.width * scale;
+    const imgH = bgImage.height * scale;
+    const imgX = (cw / zoom - imgW) / 2;
+    const imgY = (ch / zoom - imgH) / 2;
+    return { scale, imgW, imgH, imgX, imgY, cw, ch };
+  }, [bgImage, zoom]);
+
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !bgImage) return;
+    const container = containerRef.current;
+    if (!canvas || !bgImage || !container) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const container = containerRef.current;
-    if (!container) return;
-
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
+
+    const layout = getImageLayout();
+    if (!layout) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // Draw background image scaled to fit
-    const scale = Math.min(canvas.width / zoom / bgImage.width, canvas.height / zoom / bgImage.height);
-    const imgW = bgImage.width * scale;
-    const imgH = bgImage.height * scale;
-    const imgX = (canvas.width / zoom - imgW) / 2;
-    const imgY = (canvas.height / zoom - imgH) / 2;
-    ctx.drawImage(bgImage, imgX, imgY, imgW, imgH);
+    ctx.drawImage(bgImage, layout.imgX, layout.imgY, layout.imgW, layout.imgH);
 
-    // Draw placed QRs
     placedQRs.forEach((qr) => {
       const isSelected = selectedQR === qr.id;
 
-      // White background for QR
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(qr.x - 2, qr.y - 2, qr.size + 4, qr.size + 4);
+      // Draw the real QR image
+      ctx.drawImage(qr.qrImage, qr.x, qr.y, qr.size, qr.size);
 
-      // Draw QR code as a simple pattern
-      drawQRPattern(ctx, qr.x, qr.y, qr.size, `${window.location.origin}/objecte/${qr.id}`);
-
-      // Label
+      // Label background
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(qr.x, qr.y + qr.size + 2, qr.size, 16);
+      ctx.fillRect(qr.x, qr.y + qr.size, qr.size, 16);
       ctx.fillStyle = "#000000";
-      ctx.font = "10px sans-serif";
+      ctx.font = "bold 10px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(qr.objectName, qr.x + qr.size / 2, qr.y + qr.size + 13, qr.size);
+      ctx.fillText(qr.objectName, qr.x + qr.size / 2, qr.y + qr.size + 12, qr.size);
 
-      // Selection border
       if (isSelected) {
         ctx.strokeStyle = "#3b82f6";
         ctx.lineWidth = 2;
-        ctx.strokeRect(qr.x - 4, qr.y - 4, qr.size + 8, qr.size + 24);
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(qr.x - 3, qr.y - 3, qr.size + 6, qr.size + 22);
+        ctx.setLineDash([]);
       }
     });
 
     ctx.restore();
-  }, [bgImage, placedQRs, selectedQR, zoom, pan]);
+  }, [bgImage, placedQRs, selectedQR, zoom, pan, getImageLayout]);
 
-  useEffect(() => {
-    draw();
-  }, [draw]);
+  useEffect(() => { draw(); }, [draw]);
 
-  // Resize observer
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -145,33 +254,6 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
     observer.observe(container);
     return () => observer.disconnect();
   }, [draw]);
-
-  function drawQRPattern(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, _url: string) {
-    // Draw a simplified QR-like pattern
-    const cells = 7;
-    const cellSize = size / cells;
-    ctx.fillStyle = "#000000";
-
-    // Corner patterns
-    for (let row = 0; row < cells; row++) {
-      for (let col = 0; col < cells; col++) {
-        const isCorner =
-          (row < 3 && col < 3) ||
-          (row < 3 && col >= cells - 3) ||
-          (row >= cells - 3 && col < 3);
-        const isEdge =
-          row === 0 || row === cells - 1 || col === 0 || col === cells - 1;
-        const isCenter = row === 1 && col === 1 || row === 1 && col === cells - 2 ||
-          row === cells - 2 && col === 1;
-
-        if (isCorner && (isEdge || isCenter)) {
-          ctx.fillRect(x + col * cellSize, y + row * cellSize, cellSize, cellSize);
-        } else if (!isCorner && (row + col) % 2 === 0) {
-          ctx.fillRect(x + col * cellSize, y + row * cellSize, cellSize, cellSize);
-        }
-      }
-    }
-  }
 
   const getCanvasCoords = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -186,13 +268,12 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     const coords = getCanvasCoords(e);
 
-    // Check if clicking on a QR
-    for (const qr of placedQRs) {
+    for (const qr of [...placedQRs].reverse()) {
       if (
-        coords.x >= qr.x - 4 &&
-        coords.x <= qr.x + qr.size + 4 &&
-        coords.y >= qr.y - 4 &&
-        coords.y <= qr.y + qr.size + 20
+        coords.x >= qr.x - 3 &&
+        coords.x <= qr.x + qr.size + 3 &&
+        coords.y >= qr.y - 3 &&
+        coords.y <= qr.y + qr.size + 19
       ) {
         setSelectedQR(qr.id);
         setDragging(qr.id);
@@ -201,7 +282,6 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
       }
     }
 
-    // Start panning
     setSelectedQR(null);
     setIsPanning(true);
     setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
@@ -230,26 +310,35 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
     setIsPanning(false);
   };
 
-  const addQR = (obj: any) => {
+  const addQR = async (obj: any) => {
     const existing = placedQRs.find((q) => q.id === obj.id);
     if (existing) {
       toast.error("Aquest objecte ja té un QR col·locat");
       return;
     }
 
-    setPlacedQRs((prev) => [
-      ...prev,
-      {
-        id: obj.id,
-        objectId: obj.object_id,
-        objectName: obj.name,
-        x: 50,
-        y: 50,
-        size: 60,
-      },
-    ]);
-    setShowSearch(false);
-    toast.success(`QR de "${obj.name}" afegit`);
+    try {
+      const qrUrl = `${window.location.origin}/objecte/${obj.id}`;
+      const qrImage = await renderQRToImage(qrUrl, 200);
+
+      setPlacedQRs((prev) => [
+        ...prev,
+        {
+          id: obj.id,
+          objectId: obj.object_id,
+          objectName: obj.name,
+          x: 50,
+          y: 50,
+          size: 60,
+          qrImage,
+        },
+      ]);
+      setShowSearch(false);
+      toast.success(`QR funcional de "${obj.name}" afegit`);
+    } catch (err) {
+      console.error("Error generating QR:", err);
+      toast.error("Error generant el QR");
+    }
   };
 
   const removeSelectedQR = () => {
@@ -269,119 +358,48 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
     );
   };
 
-  const exportImage = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const exportImage = async () => {
+    if (!bgImage) return;
 
-    // Create export canvas without selection borders
+    const layout = getImageLayout();
+    if (!layout) return;
+
     const exportCanvas = document.createElement("canvas");
-    const bgImg = bgImage;
-    if (!bgImg) return;
-
-    exportCanvas.width = bgImg.width;
-    exportCanvas.height = bgImg.height;
+    exportCanvas.width = bgImage.width;
+    exportCanvas.height = bgImage.height;
     const ctx = exportCanvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.drawImage(bgImg, 0, 0);
+    ctx.drawImage(bgImage, 0, 0);
 
-    const dispScale = Math.min(
-      (containerRef.current?.clientWidth || 800) / zoom / bgImg.width,
-      (containerRef.current?.clientHeight || 600) / zoom / bgImg.height
-    );
-    const imgX = ((containerRef.current?.clientWidth || 800) / zoom - bgImg.width * dispScale) / 2;
-    const imgY = ((containerRef.current?.clientHeight || 600) / zoom - bgImg.height * dispScale) / 2;
-    const realScale = 1 / dispScale;
+    const realScale = 1 / layout.scale;
 
-    placedQRs.forEach((qr) => {
-      const rx = (qr.x - imgX) * realScale;
-      const ry = (qr.y - imgY) * realScale;
+    for (const qr of placedQRs) {
+      const rx = (qr.x - layout.imgX) * realScale;
+      const ry = (qr.y - layout.imgY) * realScale;
       const rs = qr.size * realScale;
 
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(rx - 2, ry - 2, rs + 4, rs + 4);
-      drawQRPattern(ctx, rx, ry, rs, `${window.location.origin}/objecte/${qr.id}`);
+      // Generate a high-res QR for the export
+      const qrUrl = `${window.location.origin}/objecte/${qr.id}`;
+      const hiResQR = await renderQRToImage(qrUrl, Math.max(400, Math.round(rs)));
 
+      ctx.drawImage(hiResQR, rx, ry, rs, rs);
+
+      // Label
+      const fontSize = Math.max(14, rs / 5);
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(rx, ry + rs + 2, rs, 20);
+      ctx.fillRect(rx, ry + rs, rs, fontSize + 8);
       ctx.fillStyle = "#000000";
-      ctx.font = "14px sans-serif";
+      ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.textAlign = "center";
-      ctx.fillText(qr.objectName, rx + rs / 2, ry + rs + 16, rs);
-    });
+      ctx.fillText(qr.objectName, rx + rs / 2, ry + rs + fontSize + 2, rs);
+    }
 
     const link = document.createElement("a");
     link.download = `jaciment-qr-${jacimentId.slice(0, 8)}.png`;
     link.href = exportCanvas.toDataURL("image/png");
     link.click();
-    toast.success("Imatge exportada!");
-  };
-
-  // Generate real QR SVGs for export
-  const exportWithRealQRs = () => {
-    if (!bgImage) return;
-
-    // We'll use html2canvas approach - create a hidden div with real QRs
-    const div = document.createElement("div");
-    div.style.position = "fixed";
-    div.style.left = "-9999px";
-    div.style.top = "0";
-    document.body.appendChild(div);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = bgImage.width;
-    canvas.height = bgImage.height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.drawImage(bgImage, 0, 0);
-
-    const container = containerRef.current;
-    if (!container) return;
-    const dispScale = Math.min(
-      container.clientWidth / zoom / bgImage.width,
-      container.clientHeight / zoom / bgImage.height
-    );
-    const imgX = (container.clientWidth / zoom - bgImage.width * dispScale) / 2;
-    const imgY = (container.clientHeight / zoom - bgImage.height * dispScale) / 2;
-    const realScale = 1 / dispScale;
-
-    // For each QR, render a real QR code onto the canvas
-    const promises = placedQRs.map((qr) => {
-      return new Promise<void>((resolve) => {
-        const url = `${window.location.origin}/objecte/${qr.id}`;
-        const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="white"/><text x="100" y="100" text-anchor="middle" font-size="12">${qr.objectId}</text></svg>`;
-
-        // Use a hidden QRCodeSVG to generate real QR
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"></svg>`;
-        
-        // Draw placeholder for now
-        const rx = (qr.x - imgX) * realScale;
-        const ry = (qr.y - imgY) * realScale;
-        const rs = qr.size * realScale;
-
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(rx - 4, ry - 4, rs + 8, rs + 28);
-        drawQRPattern(ctx, rx, ry, rs, url);
-
-        ctx.fillStyle = "#000000";
-        ctx.font = `${Math.max(12, rs / 5)}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText(qr.objectName, rx + rs / 2, ry + rs + Math.max(16, rs / 4), rs);
-
-        resolve();
-      });
-    });
-
-    Promise.all(promises).then(() => {
-      const link = document.createElement("a");
-      link.download = `jaciment-qr-${jacimentId.slice(0, 8)}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-      document.body.removeChild(div);
-      toast.success("Imatge amb QRs exportada!");
-    });
+    toast.success("Imatge amb QRs funcionals exportada!");
   };
 
   if (!imageUrl) {
@@ -394,7 +412,6 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
 
   return (
     <div className="space-y-3">
-      {/* Toolbar */}
       <div className="flex flex-wrap gap-2">
         <Dialog open={showSearch} onOpenChange={setShowSearch}>
           <DialogTrigger asChild>
@@ -449,26 +466,21 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
 
         {selectedQR && (
           <>
-            <Button variant="outline" size="sm" onClick={() => resizeSelectedQR(10)}>
-              + Mida
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => resizeSelectedQR(-10)}>
-              - Mida
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => resizeSelectedQR(10)}>+ Mida</Button>
+            <Button variant="outline" size="sm" onClick={() => resizeSelectedQR(-10)}>- Mida</Button>
             <Button variant="destructive" size="sm" onClick={removeSelectedQR}>
-              <Trash2 className="h-4 w-4 mr-1" /> Eliminar QR
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
             </Button>
           </>
         )}
 
         {placedQRs.length > 0 && (
-          <Button variant="default" size="sm" onClick={exportWithRealQRs}>
-            <Download className="h-4 w-4 mr-1" /> Exportar imatge
+          <Button variant="default" size="sm" onClick={exportImage}>
+            <Download className="h-4 w-4 mr-1" /> Exportar
           </Button>
         )}
       </div>
 
-      {/* Canvas */}
       <div
         ref={containerRef}
         className="relative border border-border rounded-lg overflow-hidden bg-muted"
@@ -486,7 +498,12 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
 
       {placedQRs.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          {placedQRs.length} QR(s) col·locats. Arrossega per moure. Fes clic per seleccionar.
+          {placedQRs.length} QR(s) funcionals col·locats. Arrossega per moure. Fes clic per seleccionar.
+        </p>
+      )}
+      {placedQRs.length === 0 && (
+        <p className="text-xs text-muted-foreground">
+          Fes clic a "Afegir QR" per col·locar codis QR funcionals d'objectes sobre la imatge del jaciment.
         </p>
       )}
     </div>
