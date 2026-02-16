@@ -23,22 +23,22 @@ export default function SearchPage() {
     if (tab === "objectes") {
       const { data: d } = await supabase
         .from("objectes")
-        .select("*, jaciments(name)")
-        .or(`name.ilike.${q},object_id.ilike.${q},tipus.ilike.${q}`)
+        .select("*, jaciments(name), ues(codi_ue)")
+        .or(`name.ilike.${q},object_id.ilike.${q},tipus.ilike.${q},persona_registra.ilike.${q},estacio_gps.ilike.${q}`)
         .limit(50);
       data = d || [];
     } else if (tab === "jaciments") {
       const { data: d } = await supabase
         .from("jaciments")
         .select("*")
-        .or(`name.ilike.${q},period.ilike.${q},description.ilike.${q}`)
+        .or(`name.ilike.${q},period.ilike.${q},description.ilike.${q},entity.ilike.${q}`)
         .limit(50);
       data = d || [];
     } else {
       const { data: d } = await supabase
         .from("ues")
         .select("*, jaciments(name)")
-        .or(`codi_ue.ilike.${q},descripcio.ilike.${q},zona.ilike.${q}`)
+        .or(`codi_ue.ilike.${q},descripcio.ilike.${q},zona.ilike.${q},campanya.ilike.${q},sector.ilike.${q},cronologia.ilike.${q},interpretacio.ilike.${q}`)
         .limit(50);
       data = d || [];
     }
