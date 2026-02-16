@@ -3,18 +3,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Edit, Trash2, QrCode, Info } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import JacimentQREditor from "@/components/JacimentQREditor";
 
 export default function JacimentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [item, setItem] = useState<any>(null);
+  const [tab, setTab] = useState("info");
 
   useEffect(() => {
     if (!id) return;
@@ -69,13 +72,32 @@ export default function JacimentDetail() {
 
       <div className="animate-fade-in">
         {item.image_url && <img src={item.image_url} alt={item.name} className="w-full h-64 object-cover" />}
-        <div className="p-4 space-y-2">
-          {item.period && <DetailRow label="Període" value={item.period} />}
-          {item.description && <DetailRow label="Descripció" value={item.description} />}
-          {item.latitude && item.longitude && (
-            <DetailRow label="Coordenades" value={`${item.latitude.toFixed(6)}, ${item.longitude.toFixed(6)}`} />
-          )}
-          <DetailRow label="Visibilitat" value={item.visibility === "public" ? "Públic" : item.visibility === "entitat" ? "Entitat" : "Esbós"} />
+
+        <div className="p-4">
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="info" className="flex-1 gap-1">
+                <Info className="h-3 w-3" /> Informació
+              </TabsTrigger>
+              <TabsTrigger value="qr-editor" className="flex-1 gap-1">
+                <QrCode className="h-3 w-3" /> Editor QR
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="info" className="space-y-2 mt-4">
+              {item.period && <DetailRow label="Període" value={item.period} />}
+              {item.description && <DetailRow label="Descripció" value={item.description} />}
+              {item.entity && <DetailRow label="Entitat" value={item.entity} />}
+              {item.latitude && item.longitude && (
+                <DetailRow label="Coordenades" value={`${item.latitude.toFixed(6)}, ${item.longitude.toFixed(6)}`} />
+              )}
+              <DetailRow label="Visibilitat" value={item.visibility === "public" ? "Públic" : item.visibility === "entitat" ? "Entitat" : "Esbós"} />
+            </TabsContent>
+
+            <TabsContent value="qr-editor" className="mt-4">
+              <JacimentQREditor jacimentId={item.id} imageUrl={item.image_url || ""} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
