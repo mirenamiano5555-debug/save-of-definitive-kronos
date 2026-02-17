@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "@/components/ImageUpload";
+import TemplateManager from "@/components/TemplateManager";
 
 interface Jaciment { id: string; name: string; }
 interface UE { id: string; codi_ue: string | null; jaciment_id: string; }
@@ -147,6 +148,24 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
       </header>
 
       <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-24 animate-fade-in">
+        <TemplateManager
+          type="objecte"
+          getCurrentData={() => ({ objectId, name, jacimentId, ueId, dataDescobriment, dataOrigen, estacioGps, codiNivell, subunitat, tipus, imageUrl, personaRegistra, midaX, midaY, altresNums, estatConservacio, visibility })}
+          applyData={(d) => {
+            if (d.name) setName(d.name);
+            if (d.jacimentId) setJacimentId(d.jacimentId);
+            if (d.ueId) setUeId(d.ueId);
+            if (d.dataOrigen) setDataOrigen(d.dataOrigen);
+            if (d.estacioGps) setEstacioGps(d.estacioGps);
+            if (d.codiNivell) setCodiNivell(d.codiNivell);
+            if (d.subunitat) setSubunitat(d.subunitat);
+            if (d.tipus) setTipus(d.tipus);
+            if (d.personaRegistra) setPersonaRegistra(d.personaRegistra);
+            if (d.estatConservacio) setEstatConservacio(d.estatConservacio);
+            if (d.visibility) setVisibility(d.visibility);
+          }}
+        />
+
         <div>
           <Label>ID únic *</Label>
           <Input value={objectId} onChange={(e) => setObjectId(e.target.value)} required disabled={!!editId} />

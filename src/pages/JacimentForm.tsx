@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import MapPicker from "@/components/MapPicker";
 import ImageUpload from "@/components/ImageUpload";
+import TemplateManager from "@/components/TemplateManager";
 
 export default function JacimentForm({ editId }: { editId?: string }) {
   const navigate = useNavigate();
@@ -90,6 +91,20 @@ export default function JacimentForm({ editId }: { editId?: string }) {
       </header>
 
       <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-24 animate-fade-in">
+        <TemplateManager
+          type="jaciment"
+          getCurrentData={() => ({ name, period, description, visibility, lat, lng, imageUrl })}
+          applyData={(d) => {
+            if (d.name) setName(d.name);
+            if (d.period) setPeriod(d.period);
+            if (d.description) setDescription(d.description);
+            if (d.visibility) setVisibility(d.visibility);
+            if (d.lat) setLat(d.lat);
+            if (d.lng) setLng(d.lng);
+            if (d.imageUrl) setImageUrl(d.imageUrl);
+          }}
+        />
+
         <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge del jaciment *" folder="jaciments" />
 
         <div>

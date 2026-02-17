@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "@/components/ImageUpload";
+import TemplateManager from "@/components/TemplateManager";
 
 interface Jaciment {
   id: string;
@@ -207,6 +208,28 @@ export default function UEForm({ editId }: { editId?: string }) {
       </header>
 
       <form onSubmit={handleSubmit} className="p-4 space-y-6 pb-24 animate-fade-in">
+        <TemplateManager
+          type="ue"
+          getCurrentData={() => ({ jacimentId, codiUe, campanya, termeMunicipal, comarca, zona, sector, ambit, fet, descripcio, color, consistencia, igualA, tallatPer, esRecolzaA, seLiRecolza, talla, reomplertPer, cobertPer, reompleA, cobreixA, interpretacio, cronologia, criteri, materials, planta, seccio, fotografia, sediment, carpologia, antracologia, fauna, metalls, observacions, visibility })}
+          applyData={(d) => {
+            if (d.jacimentId) setJacimentId(d.jacimentId);
+            if (d.codiUe) setCodiUe(d.codiUe);
+            if (d.campanya) setCampanya(d.campanya);
+            if (d.termeMunicipal) setTermeMunicipal(d.termeMunicipal);
+            if (d.comarca) setComarca(d.comarca);
+            if (d.zona) setZona(d.zona);
+            if (d.sector) setSector(d.sector);
+            if (d.ambit) setAmbit(d.ambit);
+            if (d.fet) setFet(d.fet);
+            if (d.descripcio) setDescripcio(d.descripcio);
+            if (d.color) setColor(d.color);
+            if (d.consistencia) setConsistencia(d.consistencia);
+            if (d.cronologia) setCronologia(d.cronologia);
+            if (d.criteri) setCriteri(d.criteri);
+            if (d.visibility) setVisibility(d.visibility);
+          }}
+        />
+
         <Section title="Dades identificatives">
           <div>
             <Label>Jaciment *</Label>
