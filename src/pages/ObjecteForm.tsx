@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "@/components/ImageUpload";
@@ -166,103 +167,132 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
           }}
         />
 
-        <div>
-          <Label>ID únic *</Label>
-          <Input value={objectId} onChange={(e) => setObjectId(e.target.value)} required disabled={!!editId} />
-        </div>
-        <div>
-          <Label>Nom de l'objecte *</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div>
-          <Label>Jaciment *</Label>
-          <Select value={jacimentId} onValueChange={setJacimentId}>
-            <SelectTrigger><SelectValue placeholder="Selecciona un jaciment" /></SelectTrigger>
-            <SelectContent>
-              {jaciments.map((j) => (
-                <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Unitat Estratigràfica *</Label>
-          <Select value={ueId} onValueChange={setUeId}>
-            <SelectTrigger><SelectValue placeholder="Selecciona una UE" /></SelectTrigger>
-            <SelectContent>
-              {filteredUes.map((u) => (
-                <SelectItem key={u.id} value={u.id}>{u.codi_ue || u.id.slice(0, 8)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Accordion type="multiple" defaultValue={["identificacio", "imatge", "dades", "mesures", "config"]} className="space-y-2">
+          <AccordionItem value="identificacio">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Identificació</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <div>
+                <Label>ID únic *</Label>
+                <Input value={objectId} onChange={(e) => setObjectId(e.target.value)} required disabled={!!editId} />
+              </div>
+              <div>
+                <Label>Nom de l'objecte *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div>
+                <Label>Jaciment *</Label>
+                <Select value={jacimentId} onValueChange={setJacimentId}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona un jaciment" /></SelectTrigger>
+                  <SelectContent>
+                    {jaciments.map((j) => (
+                      <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Unitat Estratigràfica *</Label>
+                <Select value={ueId} onValueChange={setUeId}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona una UE" /></SelectTrigger>
+                  <SelectContent>
+                    {filteredUes.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>{u.codi_ue || u.id.slice(0, 8)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-        <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge *" folder="objectes" />
+          <AccordionItem value="imatge">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Imatge</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge *" folder="objectes" />
+            </AccordionContent>
+          </AccordionItem>
 
-        <div>
-          <Label>Data descobriment</Label>
-          <Input type="date" value={dataDescobriment} onChange={(e) => setDataDescobriment(e.target.value)} />
-        </div>
-        <div>
-          <Label>Data d'origen</Label>
-          <Input value={dataOrigen} onChange={(e) => setDataOrigen(e.target.value)} />
-        </div>
-        <div>
-          <Label>Estació o codi GPS</Label>
-          <Input value={estacioGps} onChange={(e) => setEstacioGps(e.target.value)} />
-        </div>
-        <div>
-          <Label>Codi nivell o UE</Label>
-          <Input value={codiNivell} onChange={(e) => setCodiNivell(e.target.value)} />
-        </div>
-        <div>
-          <Label>Subunitat / tall</Label>
-          <Input value={subunitat} onChange={(e) => setSubunitat(e.target.value)} />
-        </div>
-        <div>
-          <Label>Tipus d'objecte</Label>
-          <Input value={tipus} onChange={(e) => setTipus(e.target.value)} />
-        </div>
-        <div>
-          <Label>Persona que registra</Label>
-          <Input value={personaRegistra} onChange={(e) => setPersonaRegistra(e.target.value)} />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label>Mida X (cm)</Label>
-            <Input type="number" step="0.1" value={midaX} onChange={(e) => setMidaX(e.target.value)} />
-          </div>
-          <div>
-            <Label>Mida Y (cm)</Label>
-            <Input type="number" step="0.1" value={midaY} onChange={(e) => setMidaY(e.target.value)} />
-          </div>
-        </div>
-        <div>
-          <Label>Altres números</Label>
-          <Input value={altresNums} onChange={(e) => setAltresNums(e.target.value)} />
-        </div>
-        <div>
-          <Label>Estat de conservació</Label>
-          <Select value={estatConservacio} onValueChange={setEstatConservacio}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {conservacioLabels.map((label, i) => (
-                <SelectItem key={i + 1} value={(i + 1).toString()}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Visibilitat</Label>
-          <Select value={visibility} onValueChange={setVisibility}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="public">Públic</SelectItem>
-              <SelectItem value="entitat">Només entitat</SelectItem>
-              <SelectItem value="esbos">Esbós</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <AccordionItem value="dades">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Dades de camp</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <div>
+                <Label>Data descobriment</Label>
+                <Input type="date" value={dataDescobriment} onChange={(e) => setDataDescobriment(e.target.value)} />
+              </div>
+              <div>
+                <Label>Data d'origen</Label>
+                <Input value={dataOrigen} onChange={(e) => setDataOrigen(e.target.value)} />
+              </div>
+              <div>
+                <Label>Estació o codi GPS</Label>
+                <Input value={estacioGps} onChange={(e) => setEstacioGps(e.target.value)} />
+              </div>
+              <div>
+                <Label>Codi nivell o UE</Label>
+                <Input value={codiNivell} onChange={(e) => setCodiNivell(e.target.value)} />
+              </div>
+              <div>
+                <Label>Subunitat / tall</Label>
+                <Input value={subunitat} onChange={(e) => setSubunitat(e.target.value)} />
+              </div>
+              <div>
+                <Label>Tipus d'objecte</Label>
+                <Input value={tipus} onChange={(e) => setTipus(e.target.value)} />
+              </div>
+              <div>
+                <Label>Persona que registra</Label>
+                <Input value={personaRegistra} onChange={(e) => setPersonaRegistra(e.target.value)} />
+              </div>
+              <div>
+                <Label>Altres números</Label>
+                <Input value={altresNums} onChange={(e) => setAltresNums(e.target.value)} />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="mesures">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Mesures i conservació</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Mida X (cm)</Label>
+                  <Input type="number" step="0.1" value={midaX} onChange={(e) => setMidaX(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Mida Y (cm)</Label>
+                  <Input type="number" step="0.1" value={midaY} onChange={(e) => setMidaY(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label>Estat de conservació</Label>
+                <Select value={estatConservacio} onValueChange={setEstatConservacio}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {conservacioLabels.map((label, i) => (
+                      <SelectItem key={i + 1} value={(i + 1).toString()}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="config">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Configuració</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <div>
+                <Label>Visibilitat</Label>
+                <Select value={visibility} onValueChange={setVisibility}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Públic</SelectItem>
+                    <SelectItem value="entitat">Només entitat</SelectItem>
+                    <SelectItem value="esbos">Esbós</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Guardant..." : editId ? "Actualitzar" : "Crear objecte"}

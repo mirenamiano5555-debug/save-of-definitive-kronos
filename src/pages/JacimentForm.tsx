@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import MapPicker from "@/components/MapPicker";
@@ -105,39 +106,56 @@ export default function JacimentForm({ editId }: { editId?: string }) {
           }}
         />
 
-        <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge del jaciment *" folder="jaciments" />
+        <Accordion type="multiple" defaultValue={["imatge", "dades", "ubicacio", "config"]} className="space-y-2">
+          <AccordionItem value="imatge">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Imatge</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge del jaciment *" folder="jaciments" />
+            </AccordionContent>
+          </AccordionItem>
 
-        <div>
-          <Label>Nom del jaciment *</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
+          <AccordionItem value="dades">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Dades bàsiques</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <div>
+                <Label>Nom del jaciment *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div>
+                <Label>Període històric</Label>
+                <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="p.ex. Romà, Medieval..." />
+              </div>
+              <div>
+                <Label>Descripció</Label>
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-        <div>
-          <Label>Període històric</Label>
-          <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="p.ex. Romà, Medieval..." />
-        </div>
+          <AccordionItem value="ubicacio">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Ubicació</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <MapPicker lat={lat} lng={lng} onLocationChange={(la, ln) => { setLat(la); setLng(ln); }} />
+            </AccordionContent>
+          </AccordionItem>
 
-        <div>
-          <Label>Descripció</Label>
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
-        </div>
-
-        <div>
-          <Label>Ubicació</Label>
-          <MapPicker lat={lat} lng={lng} onLocationChange={(la, ln) => { setLat(la); setLng(ln); }} />
-        </div>
-
-        <div>
-          <Label>Visibilitat</Label>
-          <Select value={visibility} onValueChange={setVisibility}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="public">Públic</SelectItem>
-              <SelectItem value="entitat">Només entitat</SelectItem>
-              <SelectItem value="esbos">Esbós</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <AccordionItem value="config">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Configuració</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <div>
+                <Label>Visibilitat</Label>
+                <Select value={visibility} onValueChange={setVisibility}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Públic</SelectItem>
+                    <SelectItem value="entitat">Només entitat</SelectItem>
+                    <SelectItem value="esbos">Esbós</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Guardant..." : editId ? "Actualitzar" : "Crear jaciment"}

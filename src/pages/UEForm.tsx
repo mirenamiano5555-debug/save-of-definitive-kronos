@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "@/components/ImageUpload";
@@ -180,12 +181,7 @@ export default function UEForm({ editId }: { editId?: string }) {
     setLoading(false);
   };
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="space-y-3">
-      <h3 className="font-serif text-lg font-semibold text-primary border-b border-border pb-1">{title}</h3>
-      {children}
-    </div>
-  );
+  
 
   const Field = ({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) => (
     <div>
@@ -230,82 +226,105 @@ export default function UEForm({ editId }: { editId?: string }) {
           }}
         />
 
-        <Section title="Dades identificatives">
-          <div>
-            <Label>Jaciment *</Label>
-            <Select value={jacimentId} onValueChange={setJacimentId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona un jaciment" /></SelectTrigger>
-              <SelectContent>
-                {jaciments.map((j) => (
-                  <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Field label="Codi UE" value={codiUe} onChange={setCodiUe} />
-          <Field label="Campanya" value={campanya} onChange={setCampanya} />
-          <Field label="Terme municipal" value={termeMunicipal} onChange={setTermeMunicipal} />
-          <Field label="Comarca" value={comarca} onChange={setComarca} />
-          <Field label="Zona" value={zona} onChange={setZona} />
-          <Field label="Sector" value={sector} onChange={setSector} />
-          <Field label="Àmbit" value={ambit} onChange={setAmbit} />
-        </Section>
+        <Accordion type="multiple" defaultValue={["identificacio", "descripcio", "relacions", "interpretacio", "documentacio", "mostres", "final"]} className="space-y-2">
+          <AccordionItem value="identificacio">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Dades identificatives</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <div>
+                <Label>Jaciment *</Label>
+                <Select value={jacimentId} onValueChange={setJacimentId}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona un jaciment" /></SelectTrigger>
+                  <SelectContent>
+                    {jaciments.map((j) => (
+                      <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Field label="Codi UE" value={codiUe} onChange={setCodiUe} />
+              <Field label="Campanya" value={campanya} onChange={setCampanya} />
+              <Field label="Terme municipal" value={termeMunicipal} onChange={setTermeMunicipal} />
+              <Field label="Comarca" value={comarca} onChange={setComarca} />
+              <Field label="Zona" value={zona} onChange={setZona} />
+              <Field label="Sector" value={sector} onChange={setSector} />
+              <Field label="Àmbit" value={ambit} onChange={setAmbit} />
+            </AccordionContent>
+          </AccordionItem>
 
-        <Section title="Descripció">
-          <Field label="FET" value={fet} onChange={setFet} />
-          <Field label="Descripció" value={descripcio} onChange={setDescripcio} textarea />
-          <Field label="Color" value={color} onChange={setColor} />
-          <Field label="Consistència" value={consistencia} onChange={setConsistencia} />
-        </Section>
+          <AccordionItem value="descripcio">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Descripció</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <Field label="FET" value={fet} onChange={setFet} />
+              <Field label="Descripció" value={descripcio} onChange={setDescripcio} textarea />
+              <Field label="Color" value={color} onChange={setColor} />
+              <Field label="Consistència" value={consistencia} onChange={setConsistencia} />
+            </AccordionContent>
+          </AccordionItem>
 
-        <Section title="Relacions estratigràfiques">
-          <Field label="Igual a" value={igualA} onChange={setIgualA} />
-          <Field label="Tallat per" value={tallatPer} onChange={setTallatPer} />
-          <Field label="Es recolza a" value={esRecolzaA} onChange={setEsRecolzaA} />
-          <Field label="Se li recolza" value={seLiRecolza} onChange={setSeLiRecolza} />
-          <Field label="Talla" value={talla} onChange={setTalla} />
-          <Field label="Reomplert per" value={reomplertPer} onChange={setReomplertPer} />
-          <Field label="Cobert per" value={cobertPer} onChange={setCobertPer} />
-          <Field label="Reomple a" value={reompleA} onChange={setReompleA} />
-          <Field label="Cobreix a" value={cobreixA} onChange={setCobreixA} />
-        </Section>
+          <AccordionItem value="relacions">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Relacions estratigràfiques</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <Field label="Igual a" value={igualA} onChange={setIgualA} />
+              <Field label="Tallat per" value={tallatPer} onChange={setTallatPer} />
+              <Field label="Es recolza a" value={esRecolzaA} onChange={setEsRecolzaA} />
+              <Field label="Se li recolza" value={seLiRecolza} onChange={setSeLiRecolza} />
+              <Field label="Talla" value={talla} onChange={setTalla} />
+              <Field label="Reomplert per" value={reomplertPer} onChange={setReomplertPer} />
+              <Field label="Cobert per" value={cobertPer} onChange={setCobertPer} />
+              <Field label="Reomple a" value={reompleA} onChange={setReompleA} />
+              <Field label="Cobreix a" value={cobreixA} onChange={setCobreixA} />
+            </AccordionContent>
+          </AccordionItem>
 
-        <Section title="Interpretació i datació">
-          <Field label="Interpretació" value={interpretacio} onChange={setInterpretacio} textarea />
-          <Field label="Cronologia" value={cronologia} onChange={setCronologia} />
-          <Field label="Criteri" value={criteri} onChange={setCriteri} />
-          <Field label="Materials" value={materials} onChange={setMaterials} textarea />
-        </Section>
+          <AccordionItem value="interpretacio">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Interpretació i datació</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <Field label="Interpretació" value={interpretacio} onChange={setInterpretacio} textarea />
+              <Field label="Cronologia" value={cronologia} onChange={setCronologia} />
+              <Field label="Criteri" value={criteri} onChange={setCriteri} />
+              <Field label="Materials" value={materials} onChange={setMaterials} textarea />
+            </AccordionContent>
+          </AccordionItem>
 
-        <Section title="Documentació">
-          <Field label="Planta" value={planta} onChange={setPlanta} />
-          <Field label="Secció" value={seccio} onChange={setSeccio} />
-          <Field label="Fotografia" value={fotografia} onChange={setFotografia} />
-        </Section>
+          <AccordionItem value="documentacio">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Documentació</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <Field label="Planta" value={planta} onChange={setPlanta} />
+              <Field label="Secció" value={seccio} onChange={setSeccio} />
+              <Field label="Fotografia" value={fotografia} onChange={setFotografia} />
+            </AccordionContent>
+          </AccordionItem>
 
-        <Section title="Mostres">
-          <Field label="Sediment" value={sediment} onChange={setSediment} />
-          <Field label="Carpologia" value={carpologia} onChange={setCarpologia} />
-          <Field label="Antracologia" value={antracologia} onChange={setAntracologia} />
-          <Field label="Fauna" value={fauna} onChange={setFauna} />
-          <Field label="Metalls" value={metalls} onChange={setMetalls} />
-        </Section>
+          <AccordionItem value="mostres">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Mostres</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <Field label="Sediment" value={sediment} onChange={setSediment} />
+              <Field label="Carpologia" value={carpologia} onChange={setCarpologia} />
+              <Field label="Antracologia" value={antracologia} onChange={setAntracologia} />
+              <Field label="Fauna" value={fauna} onChange={setFauna} />
+              <Field label="Metalls" value={metalls} onChange={setMetalls} />
+            </AccordionContent>
+          </AccordionItem>
 
-        <Section title="Final">
-          <Field label="Observacions" value={observacions} onChange={setObservacions} textarea />
-          <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge (opcional)" folder="ues" />
-          <div>
-            <Label>Visibilitat</Label>
-            <Select value={visibility} onValueChange={setVisibility}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="public">Públic</SelectItem>
-                <SelectItem value="entitat">Només entitat</SelectItem>
-                <SelectItem value="esbos">Esbós</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Section>
+          <AccordionItem value="final">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Final</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <Field label="Observacions" value={observacions} onChange={setObservacions} textarea />
+              <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge (opcional)" folder="ues" />
+              <div>
+                <Label>Visibilitat</Label>
+                <Select value={visibility} onValueChange={setVisibility}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Públic</SelectItem>
+                    <SelectItem value="entitat">Només entitat</SelectItem>
+                    <SelectItem value="esbos">Esbós</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Guardant..." : editId ? "Actualitzar" : "Crear UE"}
