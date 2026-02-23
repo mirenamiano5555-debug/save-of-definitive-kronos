@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import ExportButtons from "@/components/ExportButtons";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -86,6 +87,39 @@ export default function UEDetail() {
       <div className="animate-fade-in">
         {item.image_url && <img src={item.image_url} alt="" className="w-full h-64 object-cover" />}
         <div className="p-4 space-y-2">
+          <div className="flex justify-end mb-2">
+            <ExportButtons
+              title={item.codi_ue || `UE ${item.id.slice(0, 8)}`}
+              fields={[
+                { label: "Jaciment", value: jacimentName },
+                { label: "Codi UE", value: item.codi_ue },
+                { label: "Campanya", value: item.campanya },
+                { label: "Terme municipal", value: item.terme_municipal },
+                { label: "Comarca", value: item.comarca },
+                { label: "Zona", value: item.zona },
+                { label: "Sector", value: item.sector },
+                { label: "Àmbit", value: item.ambit },
+                { label: "FET", value: item.fet },
+                { label: "Descripció", value: item.descripcio },
+                { label: "Color", value: item.color },
+                { label: "Consistència", value: item.consistencia },
+                { label: "Igual a", value: item.igual_a },
+                { label: "Tallat per", value: item.tallat_per },
+                { label: "Es recolza a", value: item.es_recolza_a },
+                { label: "Se li recolza", value: item.se_li_recolza },
+                { label: "Talla", value: item.talla },
+                { label: "Reomplert per", value: item.reomplert_per },
+                { label: "Cobert per", value: item.cobert_per },
+                { label: "Reomple a", value: item.reomple_a },
+                { label: "Cobreix a", value: item.cobreix_a },
+                { label: "Interpretació", value: item.interpretacio },
+                { label: "Cronologia", value: item.cronologia },
+                { label: "Criteri", value: item.criteri },
+                { label: "Materials", value: item.materials },
+                { label: "Observacions", value: item.observacions },
+              ]}
+            />
+          </div>
           <Row label="Jaciment" value={jacimentName} />
           <Row label="Codi UE" value={item.codi_ue} />
           <Row label="Campanya" value={item.campanya} />

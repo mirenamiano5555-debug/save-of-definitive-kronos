@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Edit, Trash2, QrCode, Info } from "lucide-react";
 import { toast } from "sonner";
+import ExportButtons from "@/components/ExportButtons";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -85,6 +86,18 @@ export default function JacimentDetail() {
             </TabsList>
 
             <TabsContent value="info" className="space-y-2 mt-4">
+              <div className="flex justify-end mb-2">
+                <ExportButtons
+                  title={item.name}
+                  fields={[
+                    { label: "Període", value: item.period },
+                    { label: "Descripció", value: item.description },
+                    { label: "Entitat", value: item.entity },
+                    { label: "Coordenades", value: item.latitude && item.longitude ? `${item.latitude.toFixed(6)}, ${item.longitude.toFixed(6)}` : undefined },
+                    { label: "Visibilitat", value: item.visibility === "public" ? "Públic" : item.visibility === "entitat" ? "Entitat" : "Esbós" },
+                  ]}
+                />
+              </div>
               {item.period && <DetailRow label="Període" value={item.period} />}
               {item.description && <DetailRow label="Descripció" value={item.description} />}
               {item.entity && <DetailRow label="Entitat" value={item.entity} />}

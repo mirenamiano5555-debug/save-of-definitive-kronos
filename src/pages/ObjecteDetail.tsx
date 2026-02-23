@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, Trash2, QrCode, Link as LinkIcon, Copy } from "lucide-react";
 import { toast } from "sonner";
+import ExportButtons from "@/components/ExportButtons";
 import { QRCodeSVG } from "qrcode.react";
 import {
   AlertDialog,
@@ -98,7 +99,27 @@ export default function ObjecteDetail() {
         )}
 
         <div className="p-4 space-y-4">
-          <p className="text-sm text-muted-foreground">ID: {item.object_id}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">ID: {item.object_id}</p>
+            <ExportButtons
+              title={item.name}
+              fields={[
+                { label: "ID", value: item.object_id },
+                { label: "Jaciment", value: jacimentName },
+                { label: "UE", value: ueName },
+                { label: "Tipus", value: item.tipus },
+                { label: "Data descobriment", value: item.data_descobriment },
+                { label: "Data origen", value: item.data_origen },
+                { label: "Estació GPS", value: item.estacio_gps },
+                { label: "Codi nivell", value: item.codi_nivell },
+                { label: "Subunitat", value: item.subunitat },
+                { label: "Persona registra", value: item.persona_registra },
+                { label: "Mides", value: item.mida_x && item.mida_y ? `${item.mida_x} x ${item.mida_y} cm` : undefined },
+                { label: "Altres números", value: item.altres_nums },
+                { label: "Estat conservació", value: item.estat_conservacio ? conservacioLabels[item.estat_conservacio - 1] : undefined },
+              ]}
+            />
+          </div>
 
           {/* QR Section */}
           <div className="flex gap-2">

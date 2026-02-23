@@ -1,0 +1,1 @@
+ALTER TABLE public.jaciments ADD COLUMN qr_layout jsonb DEFAULT NULL;
