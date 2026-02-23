@@ -52,9 +52,10 @@ export default function HomePage() {
                 <Smartphone className="h-5 w-5" />
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby="install-desc">
               <DialogHeader>
                 <DialogTitle className="font-serif">Instal·lar Kronos al mòbil</DialogTitle>
+                <p id="install-desc" className="text-sm text-muted-foreground">Segueix les instruccions per instal·lar l'app al teu dispositiu.</p>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
