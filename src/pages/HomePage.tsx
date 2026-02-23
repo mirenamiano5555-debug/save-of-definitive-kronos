@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Search, Edit, User, MessageSquare, LogOut, Plus, PenLine } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Upload, Search, Edit, User, MessageSquare, LogOut, Plus, PenLine, Smartphone } from "lucide-react";
+import logoKronos from "@/assets/logo-kronos.png";
 
 export default function HomePage() {
   const { profile, signOut } = useAuth();
@@ -29,17 +32,53 @@ export default function HomePage() {
     },
   ];
 
+  const [showInstall, setShowInstall] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
+          <img src={logoKronos} alt="Kronos" className="h-8 w-8 rounded" />
           <h1 className="text-2xl font-serif font-bold text-primary">Kronos</h1>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground hidden sm:inline">
             Benvingut/da, <span className="font-medium text-foreground">{profile?.full_name || profile?.entity || "usuari"}</span>
           </span>
         </div>
         <div className="flex items-center gap-1">
+          <Dialog open={showInstall} onOpenChange={setShowInstall}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" title="Instal·lar app">
+                <Smartphone className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-serif">Instal·lar Kronos al mòbil</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Android (Chrome)</h3>
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                    <li>Obre <span className="font-medium text-foreground">kronosv3.lovable.app</span> al navegador Chrome.</li>
+                    <li>Toca els <span className="font-medium text-foreground">tres punts (⋮)</span> a la cantonada superior dreta.</li>
+                    <li>Selecciona <span className="font-medium text-foreground">"Afegir a la pantalla d'inici"</span> o <span className="font-medium text-foreground">"Instal·lar aplicació"</span>.</li>
+                    <li>Confirma tocant <span className="font-medium text-foreground">"Afegir"</span>.</li>
+                    <li>L'app apareixerà com una icona al teu escriptori.</li>
+                  </ol>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">iOS (Safari)</h3>
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                    <li>Obre <span className="font-medium text-foreground">kronosv3.lovable.app</span> a Safari.</li>
+                    <li>Toca la icona de <span className="font-medium text-foreground">compartir (⬆)</span> a la barra inferior.</li>
+                    <li>Desplaça't i selecciona <span className="font-medium text-foreground">"Afegir a la pantalla d'inici"</span>.</li>
+                    <li>Confirma tocant <span className="font-medium text-foreground">"Afegir"</span>.</li>
+                  </ol>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button variant="ghost" size="icon" onClick={() => navigate("/upload")}>
             <Upload className="h-5 w-5" />
           </Button>
