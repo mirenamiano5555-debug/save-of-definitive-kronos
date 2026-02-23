@@ -26,6 +26,7 @@ export type Database = {
           longitude: number | null
           name: string
           period: string | null
+          qr_layout: Json | null
           updated_at: string
           visibility: Database["public"]["Enums"]["visibility_type"]
         }
@@ -40,6 +41,7 @@ export type Database = {
           longitude?: number | null
           name: string
           period?: string | null
+          qr_layout?: Json | null
           updated_at?: string
           visibility?: Database["public"]["Enums"]["visibility_type"]
         }
@@ -54,6 +56,7 @@ export type Database = {
           longitude?: number | null
           name?: string
           period?: string | null
+          qr_layout?: Json | null
           updated_at?: string
           visibility?: Database["public"]["Enums"]["visibility_type"]
         }

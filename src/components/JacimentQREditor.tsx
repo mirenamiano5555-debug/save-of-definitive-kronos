@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, QrCode, Trash2, Download, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { Search, QrCode, Trash2, Download, ZoomIn, ZoomOut, Move, Save } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlacedQR {
@@ -150,6 +150,29 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [showSearch, setShowSearch] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Load saved QR layout
+  useEffect(() => {
+    supabase
+      .from("jaciments")
+      .select("qr_layout")
+      .eq("id", jacimentId)
+      .single()
+      .then(({ data }) => {
+        if (data?.qr_layout && Array.isArray(data.qr_layout)) {
+          // Restore placed QRs from saved layout
+          const savedItems = data.qr_layout as Array<{ id: string; objectId: string; objectName: string; x: number; y: number; size: number }>;
+          Promise.all(
+            savedItems.map(async (s) => {
+              const qrUrl = `${window.location.origin}/objecte/${s.id}`;
+              const qrImage = await renderQRToImage(qrUrl, 200);
+              return { ...s, qrImage } as PlacedQR;
+            })
+          ).then(setPlacedQRs);
+        }
+      });
+  }, [jacimentId]);
 
   useEffect(() => {
     supabase
@@ -358,6 +381,23 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
     );
   };
 
+  const saveLayout = async () => {
+    setSaving(true);
+    const layoutData = placedQRs.map(({ id, objectId, objectName, x, y, size }) => ({
+      id, objectId, objectName, x, y, size,
+    }));
+    const { error } = await supabase
+      .from("jaciments")
+      .update({ qr_layout: layoutData } as any)
+      .eq("id", jacimentId);
+    if (error) {
+      toast.error("Error desant la disposició");
+    } else {
+      toast.success("Disposició dels QRs desada!");
+    }
+    setSaving(false);
+  };
+
   const exportImage = async () => {
     if (!bgImage) return;
 
@@ -475,9 +515,14 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
         )}
 
         {placedQRs.length > 0 && (
-          <Button variant="default" size="sm" onClick={exportImage}>
-            <Download className="h-4 w-4 mr-1" /> Exportar
-          </Button>
+          <>
+            <Button variant="default" size="sm" onClick={saveLayout} disabled={saving}>
+              <Save className="h-4 w-4 mr-1" /> {saving ? "Desant..." : "Guardar"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportImage}>
+              <Download className="h-4 w-4 mr-1" /> Exportar
+            </Button>
+          </>
         )}
       </div>
 
