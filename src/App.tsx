@@ -18,6 +18,7 @@ import ObjecteDetail from "./pages/ObjecteDetail";
 import JacimentDetail from "./pages/JacimentDetail";
 import UEDetail from "./pages/UEDetail";
 import { EditJaciment, EditUE, EditObjecte } from "./pages/EditPages";
+import MessagesPage from "./pages/MessagesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const AppRoutes = () => (
     <Route path="/edit/jaciment/:id" element={<ProtectedRoute><EditJaciment /></ProtectedRoute>} />
     <Route path="/edit/ue/:id" element={<ProtectedRoute><EditUE /></ProtectedRoute>} />
     <Route path="/edit/objecte/:id" element={<ProtectedRoute><EditObjecte /></ProtectedRoute>} />
+    <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

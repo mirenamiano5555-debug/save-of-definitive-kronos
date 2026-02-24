@@ -89,7 +89,10 @@ export default function JacimentDetail() {
               <div className="flex justify-end mb-2">
                 <ExportButtons
                   title={item.name}
+                  variant="fitxa"
+                  type="jaciment"
                   fields={[
+                    { label: "Nom", value: item.name },
                     { label: "Període", value: item.period },
                     { label: "Descripció", value: item.description },
                     { label: "Entitat", value: item.entity },
