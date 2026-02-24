@@ -103,6 +103,8 @@ export default function ObjecteDetail() {
             <p className="text-sm text-muted-foreground">ID: {item.object_id}</p>
             <ExportButtons
               title={item.name}
+              variant="fitxa"
+              type="objecte"
               fields={[
                 { label: "ID", value: item.object_id },
                 { label: "Jaciment", value: jacimentName },

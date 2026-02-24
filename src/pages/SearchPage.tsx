@@ -37,8 +37,8 @@ export default function SearchPage() {
     } else {
       const { data: d } = await supabase
         .from("ues")
-        .select("*, jaciments(name)")
-        .or(`codi_ue.ilike.${q},descripcio.ilike.${q},zona.ilike.${q},campanya.ilike.${q},sector.ilike.${q},cronologia.ilike.${q},interpretacio.ilike.${q}`)
+        .select("*,jaciments(name)")
+        .or(`codi_ue.ilike.${q},descripcio.ilike.${q},zona.ilike.${q},campanya.ilike.${q},sector.ilike.${q},cronologia.ilike.${q},interpretacio.ilike.${q},terme_municipal.ilike.${q},comarca.ilike.${q}`)
         .limit(50);
       data = d || [];
     }

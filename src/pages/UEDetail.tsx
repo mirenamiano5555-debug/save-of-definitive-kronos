@@ -90,6 +90,8 @@ export default function UEDetail() {
           <div className="flex justify-end mb-2">
             <ExportButtons
               title={item.codi_ue || `UE ${item.id.slice(0, 8)}`}
+              variant="fitxa"
+              type="ue"
               fields={[
                 { label: "Jaciment", value: jacimentName },
                 { label: "Codi UE", value: item.codi_ue },
@@ -116,6 +118,14 @@ export default function UEDetail() {
                 { label: "Cronologia", value: item.cronologia },
                 { label: "Criteri", value: item.criteri },
                 { label: "Materials", value: item.materials },
+                { label: "Planta", value: item.planta },
+                { label: "Secció", value: item.seccio },
+                { label: "Fotografia", value: item.fotografia },
+                { label: "Sediment", value: item.sediment },
+                { label: "Carpologia", value: item.carpologia },
+                { label: "Antracologia", value: item.antracologia },
+                { label: "Fauna", value: item.fauna },
+                { label: "Metalls", value: item.metalls },
                 { label: "Observacions", value: item.observacions },
               ]}
             />
