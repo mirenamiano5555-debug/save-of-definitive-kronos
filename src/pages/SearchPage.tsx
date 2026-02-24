@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Search as SearchIcon, Mountain, Layers, Box } from "lucide-react";
-import ItemCard from "@/components/ItemCard";
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -13,6 +12,7 @@ export default function SearchPage() {
   const [tab, setTab] = useState("objectes");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [imageBustKey, setImageBustKey] = useState(Date.now());
 
   const doSearch = async () => {
     if (!query.trim()) return;
@@ -44,13 +44,40 @@ export default function SearchPage() {
     }
 
     setResults(data);
+    setImageBustKey(Date.now());
     setLoading(false);
   };
 
   useEffect(() => {
-    const timeout = setTimeout(() => { if (query.trim()) doSearch(); }, 300);
+    const timeout = setTimeout(() => {
+      if (query.trim()) doSearch();
+    }, 300);
     return () => clearTimeout(timeout);
   }, [query, tab]);
+
+  const getItemName = (item: any) => {
+    if (tab === "objectes") return item.name || "Objecte sense nom";
+    if (tab === "jaciments") return item.name || "Jaciment sense nom";
+    return item.codi_ue || `UE ${item.id.slice(0, 8)}`;
+  };
+
+  const getItemId = (item: any) => {
+    if (tab === "objectes") return item.object_id || item.id;
+    if (tab === "jaciments") return item.id;
+    return item.codi_ue || item.id;
+  };
+
+  const getItemRoute = (item: any) => {
+    if (tab === "objectes") return `/objecte/${item.id}`;
+    if (tab === "jaciments") return `/jaciment/${item.id}`;
+    return `/ue/${item.id}`;
+  };
+
+  const getImageSrc = (imageUrl: string | null) => {
+    if (!imageUrl) return null;
+    const separator = imageUrl.includes("?") ? "&" : "?";
+    return `${imageUrl}${separator}v=${imageBustKey}`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,7 +99,13 @@ export default function SearchPage() {
           />
         </div>
 
-        <Tabs value={tab} onValueChange={(v) => { setTab(v); setResults([]); }}>
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            setTab(v);
+            setResults([]);
+          }}
+        >
           <TabsList className="w-full">
             <TabsTrigger value="objectes" className="flex-1 gap-1">
               <Box className="h-3 w-3" /> Objectes
@@ -90,12 +123,42 @@ export default function SearchPage() {
             {!loading && results.length === 0 && query && (
               <p className="text-center text-muted-foreground">Cap resultat trobat</p>
             )}
-            {results.map((item) => (
-              <ItemCard key={item.id} item={item} type={tab as any} />
-            ))}
+
+            {results.map((item) => {
+              const imageSrc = getImageSrc(item.image_url);
+              const itemName = getItemName(item);
+              const itemId = getItemId(item);
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(getItemRoute(item))}
+                  className="w-full rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-muted/50 flex items-center gap-3"
+                >
+                  <div className="h-16 w-16 rounded-md bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    {imageSrc ? (
+                      <img
+                        src={imageSrc}
+                        alt={`Imatge de ${itemName}`}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground text-center px-1">Sense imatge</span>
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{itemName}</p>
+                    <p className="text-xs text-muted-foreground truncate">ID: {itemId}</p>
+                  </div>
+                </button>
+              );
+            })}
           </TabsContent>
         </Tabs>
       </div>
     </div>
   );
 }
+

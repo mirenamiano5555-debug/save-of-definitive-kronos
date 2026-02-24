@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +35,15 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const appendMessage = useCallback((message: Message) => {
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === message.id)) return prev;
+      return [...prev, message].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    });
+  }, []);
 
   // Load contacts (all profiles except self)
   useEffect(() => {
@@ -94,7 +103,7 @@ export default function MessagesPage() {
 
     // Realtime subscription
     const channel = supabase
-      .channel(`messages-${selectedContact.user_id}`)
+      .channel(`messages-${user.id}-${selectedContact.user_id}`)
       .on(
         "postgres_changes",
         {
@@ -108,8 +117,7 @@ export default function MessagesPage() {
             (msg.sender_id === user.id && msg.receiver_id === selectedContact.user_id) ||
             (msg.sender_id === selectedContact.user_id && msg.receiver_id === user.id)
           ) {
-            setMessages((prev) => [...prev, msg]);
-            // Mark as read if received
+            appendMessage(msg);
             if (msg.sender_id === selectedContact.user_id) {
               supabase.from("messages").update({ read: true }).eq("id", msg.id).then(() => {});
             }
@@ -121,7 +129,7 @@ export default function MessagesPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, selectedContact]);
+  }, [user, selectedContact, appendMessage]);
 
   // Auto-scroll
   useEffect(() => {
@@ -132,17 +140,25 @@ export default function MessagesPage() {
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !user || !selectedContact || sending) return;
+
     setSending(true);
-    const { error } = await supabase.from("messages").insert({
-      content: newMessage.trim(),
-      sender_id: user.id,
-      receiver_id: selectedContact.user_id,
-    });
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        content: newMessage.trim(),
+        sender_id: user.id,
+        receiver_id: selectedContact.user_id,
+      })
+      .select("*")
+      .single();
+
     if (error) {
       toast.error("Error enviant el missatge");
-    } else {
+    } else if (data) {
+      appendMessage(data as Message);
       setNewMessage("");
     }
+
     setSending(false);
   };
 
