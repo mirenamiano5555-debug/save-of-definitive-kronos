@@ -45,8 +45,8 @@ export default function JacimentForm({ editId }: { editId?: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (profile?.role !== "cap") {
-      toast.error("Només els usuaris amb rol 'cap' poden crear jaciments");
+    if (profile?.role !== "director") {
+      toast.error("Només els usuaris amb rol 'director' poden crear jaciments");
       return;
     }
     if (!imageUrl) {

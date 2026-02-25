@@ -61,7 +61,7 @@ export default function HomePage() {
                 <div>
                   <h3 className="font-semibold mb-2">Android (Chrome)</h3>
                   <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                    <li>Obre <span className="font-medium text-foreground">kronosv3.lovable.app</span> al navegador Chrome.</li>
+                    <li>Obre <span className="font-medium text-foreground">kronos-arena.lovable.app</span> al navegador Chrome.</li>
                     <li>Toca els <span className="font-medium text-foreground">tres punts (⋮)</span> a la cantonada superior dreta.</li>
                     <li>Selecciona <span className="font-medium text-foreground">"Afegir a la pantalla d'inici"</span> o <span className="font-medium text-foreground">"Instal·lar aplicació"</span>.</li>
                     <li>Confirma tocant <span className="font-medium text-foreground">"Afegir"</span>.</li>
@@ -71,7 +71,7 @@ export default function HomePage() {
                 <div>
                   <h3 className="font-semibold mb-2">iOS (Safari)</h3>
                   <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                    <li>Obre <span className="font-medium text-foreground">kronosv3.lovable.app</span> a Safari.</li>
+                    <li>Obre <span className="font-medium text-foreground">kronos-arena.lovable.app</span> a Safari.</li>
                     <li>Toca la icona de <span className="font-medium text-foreground">compartir (⬆)</span> a la barra inferior.</li>
                     <li>Desplaça't i selecciona <span className="font-medium text-foreground">"Afegir a la pantalla d'inici"</span>.</li>
                     <li>Confirma tocant <span className="font-medium text-foreground">"Afegir"</span>.</li>

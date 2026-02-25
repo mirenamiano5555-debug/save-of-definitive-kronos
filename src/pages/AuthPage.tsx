@@ -12,7 +12,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [entity, setEntity] = useState("");
-  const [role, setRole] = useState<"treballador" | "cap">("treballador");
+  const [role, setRole] = useState<"tecnic" | "director">("tecnic");
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -93,11 +93,11 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <Label htmlFor="role">Rol</Label>
-                  <Select value={role} onValueChange={(v) => setRole(v as "treballador" | "cap")}>
+                  <Select value={role} onValueChange={(v) => setRole(v as "tecnic" | "director")}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="treballador">Treballador</SelectItem>
-                      <SelectItem value="cap">Cap</SelectItem>
+                      <SelectItem value="tecnic">Tècnic</SelectItem>
+                      <SelectItem value="director">Director</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

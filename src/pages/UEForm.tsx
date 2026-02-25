@@ -18,6 +18,19 @@ interface Jaciment {
   name: string;
 }
 
+function Field({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      {textarea ? (
+        <Textarea value={value} onChange={(e) => onChange(e.target.value)} />
+      ) : (
+        <Input value={value} onChange={(e) => onChange(e.target.value)} />
+      )}
+    </div>
+  );
+}
+
 export default function UEForm({ editId }: { editId?: string }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -180,19 +193,6 @@ export default function UEForm({ editId }: { editId?: string }) {
     }
     setLoading(false);
   };
-
-  
-
-  const Field = ({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) => (
-    <div>
-      <Label>{label}</Label>
-      {textarea ? (
-        <Textarea value={value} onChange={(e) => onChange(e.target.value)} />
-      ) : (
-        <Input value={value} onChange={(e) => onChange(e.target.value)} />
-      )}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-background">

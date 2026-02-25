@@ -19,7 +19,7 @@ export default function ProfilePage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [entity, setEntity] = useState(profile?.entity || "");
-  const [role, setRole] = useState(profile?.role || "treballador");
+  const [role, setRole] = useState(profile?.role || "tecnic");
   const [location, setLocation] = useState(profile?.location || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
   const [saving, setSaving] = useState(false);
@@ -83,8 +83,8 @@ export default function ProfilePage() {
           <Select value={role} onValueChange={(v) => setRole(v as any)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="treballador">Treballador</SelectItem>
-              <SelectItem value="cap">Cap</SelectItem>
+              <SelectItem value="tecnic">Tècnic</SelectItem>
+              <SelectItem value="director">Director</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -50,19 +50,25 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
     });
   }, []);
 
+  const [initialLoaded, setInitialLoaded] = useState(false);
+
   useEffect(() => {
     setFilteredUes(ues.filter((u) => u.jaciment_id === jacimentId));
-    setUeId("");
+    if (initialLoaded) setUeId("");
   }, [jacimentId, ues]);
 
   useEffect(() => {
     if (editId) {
       supabase.from("objectes").select("*").eq("id", editId).single().then(({ data }) => {
         if (data) {
-          setObjectId(data.object_id);
+          const rawId = data.object_id || "";
+          setObjectId(rawId.startsWith("MMP") ? rawId.replace(/^MMP/, "") : rawId);
           setName(data.name);
           setJacimentId(data.jaciment_id);
-          setUeId(data.ue_id || "");
+          setTimeout(() => {
+            setUeId(data.ue_id || "");
+            setInitialLoaded(true);
+          }, 200);
           setDataDescobriment(data.data_descobriment || "");
           setDataOrigen(data.data_origen || "");
           setEstacioGps(data.estacio_gps || "");
@@ -78,12 +84,15 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
           setVisibility(data.visibility);
         }
       });
+    } else {
+      setInitialLoaded(true);
     }
   }, [editId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    const fullObjectId = "MMP" + objectId;
     if (!jacimentId || !ueId || !objectId || !name || !imageUrl) {
       toast.error("Omple tots els camps obligatoris");
       return;
@@ -91,7 +100,7 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
 
     // Check duplicate ID
     if (!editId) {
-      const { data: existing } = await supabase.from("objectes").select("id").eq("object_id", objectId).maybeSingle();
+      const { data: existing } = await supabase.from("objectes").select("id").eq("object_id", fullObjectId).maybeSingle();
       if (existing) {
         toast.error("Aquest ID ja existeix. Tria'n un altre.");
         return;
@@ -102,7 +111,7 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
     const jacimentName = jaciments.find((j) => j.id === jacimentId)?.name || "";
 
     const payload = {
-      object_id: objectId,
+      object_id: fullObjectId,
       name,
       jaciment_id: jacimentId,
       ue_id: ueId,
@@ -172,8 +181,19 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
             <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Identificació</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <div>
-                <Label>ID únic *</Label>
-                <Input value={objectId} onChange={(e) => setObjectId(e.target.value)} required disabled={!!editId} />
+                <Label>ID únic * (MMP + número)</Label>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium text-muted-foreground px-2 py-2 bg-muted rounded-l-md border border-r-0 border-input h-10 flex items-center">MMP</span>
+                  <Input
+                    className="rounded-l-none"
+                    value={objectId}
+                    onChange={(e) => setObjectId(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    required
+                    disabled={!!editId}
+                    placeholder="00001"
+                    inputMode="numeric"
+                  />
+                </div>
               </div>
               <div>
                 <Label>Nom de l'objecte *</Label>
