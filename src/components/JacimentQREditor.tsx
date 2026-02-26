@@ -288,9 +288,28 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
     };
   };
 
+  const getCanvasCoordsFromTouch = (e: React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    return {
+      x: (touch.clientX - rect.left - pan.x) / zoom,
+      y: (touch.clientY - rect.top - pan.y) / zoom,
+    };
+  };
+
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     const coords = getCanvasCoords(e);
+    handlePointerDown(coords, e.clientX, e.clientY);
+  };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const coords = getCanvasCoordsFromTouch(e);
+    handlePointerDown(coords, e.touches[0].clientX, e.touches[0].clientY);
+  };
+
+  const handlePointerDown = (coords: { x: number; y: number }, clientX: number, clientY: number) => {
     for (const qr of [...placedQRs].reverse()) {
       if (
         coords.x >= qr.x - 3 &&
@@ -304,10 +323,9 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
         return;
       }
     }
-
     setSelectedQR(null);
     setIsPanning(true);
-    setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    setPanStart({ x: clientX - pan.x, y: clientY - pan.y });
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
@@ -324,6 +342,25 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
       setPan({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
+      });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (dragging) {
+      const coords = getCanvasCoordsFromTouch(e);
+      setPlacedQRs((prev) =>
+        prev.map((qr) =>
+          qr.id === dragging
+            ? { ...qr, x: coords.x - dragOffset.x, y: coords.y - dragOffset.y }
+            : qr
+        )
+      );
+    } else if (isPanning) {
+      setPan({
+        x: e.touches[0].clientX - panStart.x,
+        y: e.touches[0].clientY - panStart.y,
       });
     }
   };
@@ -533,11 +570,14 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
       >
         <canvas
           ref={canvasRef}
-          className="w-full h-full"
+          className="w-full h-full touch-none"
           onMouseDown={handleCanvasMouseDown}
           onMouseMove={handleCanvasMouseMove}
           onMouseUp={handleCanvasMouseUp}
           onMouseLeave={handleCanvasMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleCanvasMouseUp}
         />
       </div>
 
