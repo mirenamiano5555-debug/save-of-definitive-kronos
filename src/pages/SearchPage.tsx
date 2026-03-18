@@ -27,7 +27,7 @@ export default function SearchPage() {
     if (tab === "objectes") {
       let qb = supabase.from("objectes").select("*, jaciments(name), ues(codi_ue)")
         .or(`name.ilike.${q},object_id.ilike.${q},tipus.ilike.${q},persona_registra.ilike.${q},estacio_gps.ilike.${q}`);
-      if (filters.visibility) qb = qb.eq("visibility", filters.visibility);
+      if (filters.visibility) qb = qb.eq("visibility", filters.visibility as any);
       if (filters.tipus) qb = qb.ilike("tipus", `%${filters.tipus}%`);
       if (filters.estatConservacio) qb = qb.eq("estat_conservacio", parseInt(filters.estatConservacio));
       if (filters.dateFrom) qb = qb.gte("created_at", filters.dateFrom);
