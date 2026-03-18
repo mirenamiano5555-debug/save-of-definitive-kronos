@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Box, Layers, Mountain } from "lucide-react";
 import ItemCard from "@/components/ItemCard";
+import MassExport from "@/components/MassExport";
 
 export default function MyItemsPage() {
   const navigate = useNavigate();
@@ -13,12 +15,12 @@ export default function MyItemsPage() {
   const [tab, setTab] = useState("objectes");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const fetchItems = async () => {
     if (!user) return;
     setLoading(true);
     let data: any[] = [];
-
     if (tab === "objectes") {
       const { data: d } = await supabase.from("objectes").select("*, jaciments(name)").eq("created_by", user.id).order("created_at", { ascending: false });
       data = d || [];
@@ -29,12 +31,27 @@ export default function MyItemsPage() {
       const { data: d } = await supabase.from("ues").select("*, jaciments(name)").eq("created_by", user.id).order("created_at", { ascending: false });
       data = d || [];
     }
-
     setItems(data);
+    setSelected(new Set());
     setLoading(false);
   };
 
   useEffect(() => { fetchItems(); }, [tab, user]);
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selected.size === items.length) setSelected(new Set());
+    else setSelected(new Set(items.map(i => i.id)));
+  };
+
+  const selectedItems = items.filter(i => selected.has(i.id));
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,11 +70,25 @@ export default function MyItemsPage() {
             <TabsTrigger value="jaciments" className="flex-1 gap-1"><Mountain className="h-3 w-3" /> Jaciments</TabsTrigger>
           </TabsList>
 
-          <TabsContent value={tab} className="space-y-3 mt-4">
+          {items.length > 0 && (
+            <div className="flex items-center justify-between mt-3">
+              <Button variant="ghost" size="sm" onClick={selectAll} className="h-7 text-xs">
+                {selected.size === items.length ? "Deseleccionar" : "Seleccionar tot"}
+              </Button>
+              {selected.size > 0 && <MassExport items={selectedItems} type={tab as any} />}
+            </div>
+          )}
+
+          <TabsContent value={tab} className="space-y-3 mt-2">
             {loading && <p className="text-center text-muted-foreground">Carregant...</p>}
             {!loading && items.length === 0 && <p className="text-center text-muted-foreground">Encara no tens {tab}</p>}
-            {items.map((item) => (
-              <ItemCard key={item.id} item={item} type={tab as any} />
+            {items.map(item => (
+              <div key={item.id} className="flex items-center gap-2">
+                <Checkbox checked={selected.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
+                <div className="flex-1">
+                  <ItemCard item={item} type={tab as any} />
+                </div>
+              </div>
             ))}
           </TabsContent>
         </Tabs>

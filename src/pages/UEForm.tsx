@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,21 +12,16 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "@/components/ImageUpload";
 import TemplateManager from "@/components/TemplateManager";
+import UERelationSelect from "@/components/UERelationSelect";
 
-interface Jaciment {
-  id: string;
-  name: string;
-}
+interface Jaciment { id: string; name: string; }
+interface UEOption { id: string; codi_ue: string | null; }
 
 function Field({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) {
   return (
     <div>
       <Label>{label}</Label>
-      {textarea ? (
-        <Textarea value={value} onChange={(e) => onChange(e.target.value)} />
-      ) : (
-        <Input value={value} onChange={(e) => onChange(e.target.value)} />
-      )}
+      {textarea ? <Textarea value={value} onChange={e => onChange(e.target.value)} /> : <Input value={value} onChange={e => onChange(e.target.value)} />}
     </div>
   );
 }
@@ -36,7 +31,8 @@ export default function UEForm({ editId }: { editId?: string }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [jaciments, setJaciments] = useState<Jaciment[]>([]);
-  
+  const [ueOptions, setUeOptions] = useState<UEOption[]>([]);
+
   const [jacimentId, setJacimentId] = useState("");
   const [codiUe, setCodiUe] = useState("");
   const [campanya, setCampanya] = useState("");
@@ -77,53 +73,34 @@ export default function UEForm({ editId }: { editId?: string }) {
   const [longitude, setLongitude] = useState<number | null>(null);
 
   useEffect(() => {
-    supabase.from("jaciments").select("id, name").then(({ data }) => {
-      if (data) setJaciments(data);
-    });
+    supabase.from("jaciments").select("id, name").then(({ data }) => { if (data) setJaciments(data); });
   }, []);
+
+  const fetchUEOptions = useCallback(async () => {
+    if (!jacimentId) { setUeOptions([]); return; }
+    const { data } = await supabase.from("ues").select("id, codi_ue").eq("jaciment_id", jacimentId);
+    if (data) setUeOptions(data.filter(ue => ue.id !== editId));
+  }, [jacimentId, editId]);
+
+  useEffect(() => { fetchUEOptions(); }, [fetchUEOptions]);
 
   useEffect(() => {
     if (editId) {
       supabase.from("ues").select("*").eq("id", editId).single().then(({ data }) => {
         if (data) {
-          setJacimentId(data.jaciment_id);
-          setCodiUe(data.codi_ue || "");
-          setCampanya(data.campanya || "");
-          setTermeMunicipal(data.terme_municipal || "");
-          setComarca(data.comarca || "");
-          setZona(data.zona || "");
-          setSector(data.sector || "");
-          setAmbit(data.ambit || "");
-          setFet(data.fet || "");
-          setDescripcio(data.descripcio || "");
-          setColor(data.color || "");
-          setConsistencia(data.consistencia || "");
-          setIgualA(data.igual_a || "");
-          setTallatPer(data.tallat_per || "");
-          setEsRecolzaA(data.es_recolza_a || "");
-          setSeLiRecolza(data.se_li_recolza || "");
-          setTalla(data.talla || "");
-          setReomplertPer(data.reomplert_per || "");
-          setCobertPer(data.cobert_per || "");
-          setReompleA(data.reomple_a || "");
-          setCobreixA(data.cobreix_a || "");
-          setInterpretacio(data.interpretacio || "");
-          setCronologia(data.cronologia || "");
-          setCriteri(data.criteri || "");
-          setMaterials(data.materials || "");
-          setPlanta(data.planta || "");
-          setSeccio(data.seccio || "");
-          setFotografia(data.fotografia || "");
-          setSediment(data.sediment || "");
-          setCarpologia(data.carpologia || "");
-          setAntracologia(data.antracologia || "");
-          setFauna(data.fauna || "");
-          setMetalls(data.metalls || "");
-          setObservacions(data.observacions || "");
-          setImageUrl(data.image_url || "");
-          setVisibility(data.visibility);
-          setLatitude(data.latitude);
-          setLongitude(data.longitude);
+          setJacimentId(data.jaciment_id); setCodiUe(data.codi_ue || ""); setCampanya(data.campanya || "");
+          setTermeMunicipal(data.terme_municipal || ""); setComarca(data.comarca || ""); setZona(data.zona || "");
+          setSector(data.sector || ""); setAmbit(data.ambit || ""); setFet(data.fet || "");
+          setDescripcio(data.descripcio || ""); setColor(data.color || ""); setConsistencia(data.consistencia || "");
+          setIgualA(data.igual_a || ""); setTallatPer(data.tallat_per || ""); setEsRecolzaA(data.es_recolza_a || "");
+          setSeLiRecolza(data.se_li_recolza || ""); setTalla(data.talla || ""); setReomplertPer(data.reomplert_per || "");
+          setCobertPer(data.cobert_per || ""); setReompleA(data.reomple_a || ""); setCobreixA(data.cobreix_a || "");
+          setInterpretacio(data.interpretacio || ""); setCronologia(data.cronologia || ""); setCriteri(data.criteri || "");
+          setMaterials(data.materials || ""); setPlanta(data.planta || ""); setSeccio(data.seccio || "");
+          setFotografia(data.fotografia || ""); setSediment(data.sediment || ""); setCarpologia(data.carpologia || "");
+          setAntracologia(data.antracologia || ""); setFauna(data.fauna || ""); setMetalls(data.metalls || "");
+          setObservacions(data.observacions || ""); setImageUrl(data.image_url || ""); setVisibility(data.visibility);
+          setLatitude(data.latitude); setLongitude(data.longitude);
         }
       });
     }
@@ -131,52 +108,16 @@ export default function UEForm({ editId }: { editId?: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !jacimentId) {
-      toast.error("Selecciona un jaciment");
-      return;
-    }
+    if (!user || !jacimentId) { toast.error("Selecciona un jaciment"); return; }
     setLoading(true);
 
     const payload = {
-      jaciment_id: jacimentId,
-      codi_ue: codiUe,
-      campanya,
-      terme_municipal: termeMunicipal,
-      comarca,
-      zona,
-      sector,
-      ambit,
-      fet,
-      descripcio,
-      color,
-      consistencia,
-      igual_a: igualA,
-      tallat_per: tallatPer,
-      es_recolza_a: esRecolzaA,
-      se_li_recolza: seLiRecolza,
-      talla,
-      reomplert_per: reomplertPer,
-      cobert_per: cobertPer,
-      reomple_a: reompleA,
-      cobreix_a: cobreixA,
-      interpretacio,
-      cronologia,
-      criteri,
-      materials,
-      planta,
-      seccio,
-      fotografia,
-      sediment,
-      carpologia,
-      antracologia,
-      fauna,
-      metalls,
-      observacions,
-      image_url: imageUrl,
-      visibility: visibility as any,
-      latitude,
-      longitude,
-      created_by: user.id,
+      jaciment_id: jacimentId, codi_ue: codiUe, campanya, terme_municipal: termeMunicipal, comarca, zona, sector, ambit, fet,
+      descripcio, color, consistencia, igual_a: igualA, tallat_per: tallatPer, es_recolza_a: esRecolzaA,
+      se_li_recolza: seLiRecolza, talla, reomplert_per: reomplertPer, cobert_per: cobertPer, reomple_a: reompleA,
+      cobreix_a: cobreixA, interpretacio, cronologia, criteri, materials, planta, seccio, fotografia, sediment,
+      carpologia, antracologia, fauna, metalls, observacions, image_url: imageUrl, visibility: visibility as any,
+      latitude, longitude, created_by: user.id,
     };
 
     let error;
@@ -186,20 +127,27 @@ export default function UEForm({ editId }: { editId?: string }) {
       ({ error } = await supabase.from("ues").insert(payload));
     }
 
-    if (error) toast.error(error.message);
-    else {
-      toast.success(editId ? "UE actualitzada!" : "UE creada!");
-      navigate(-1);
+    // Log the change
+    if (!error) {
+      await supabase.from("change_logs").insert({
+        table_name: "ues",
+        record_id: editId || "new",
+        user_id: user.id,
+        changes: editId ? { action: "update", fields: payload } : { action: "create" },
+      } as any);
     }
+
+    if (error) toast.error(error.message);
+    else { toast.success(editId ? "UE actualitzada!" : "UE creada!"); navigate(-1); }
     setLoading(false);
   };
+
+  const relationProps = { ueOptions, jacimentId, onUECreated: fetchUEOptions };
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
         <h1 className="text-xl font-serif font-bold">{editId ? "Editar" : "Nova"} Unitat Estratigràfica</h1>
       </header>
 
@@ -208,20 +156,12 @@ export default function UEForm({ editId }: { editId?: string }) {
           type="ue"
           getCurrentData={() => ({ jacimentId, codiUe, campanya, termeMunicipal, comarca, zona, sector, ambit, fet, descripcio, color, consistencia, igualA, tallatPer, esRecolzaA, seLiRecolza, talla, reomplertPer, cobertPer, reompleA, cobreixA, interpretacio, cronologia, criteri, materials, planta, seccio, fotografia, sediment, carpologia, antracologia, fauna, metalls, observacions, visibility })}
           applyData={(d) => {
-            if (d.jacimentId) setJacimentId(d.jacimentId);
-            if (d.codiUe) setCodiUe(d.codiUe);
-            if (d.campanya) setCampanya(d.campanya);
-            if (d.termeMunicipal) setTermeMunicipal(d.termeMunicipal);
-            if (d.comarca) setComarca(d.comarca);
-            if (d.zona) setZona(d.zona);
-            if (d.sector) setSector(d.sector);
-            if (d.ambit) setAmbit(d.ambit);
-            if (d.fet) setFet(d.fet);
-            if (d.descripcio) setDescripcio(d.descripcio);
-            if (d.color) setColor(d.color);
-            if (d.consistencia) setConsistencia(d.consistencia);
-            if (d.cronologia) setCronologia(d.cronologia);
-            if (d.criteri) setCriteri(d.criteri);
+            if (d.jacimentId) setJacimentId(d.jacimentId); if (d.codiUe) setCodiUe(d.codiUe);
+            if (d.campanya) setCampanya(d.campanya); if (d.termeMunicipal) setTermeMunicipal(d.termeMunicipal);
+            if (d.comarca) setComarca(d.comarca); if (d.zona) setZona(d.zona); if (d.sector) setSector(d.sector);
+            if (d.ambit) setAmbit(d.ambit); if (d.fet) setFet(d.fet); if (d.descripcio) setDescripcio(d.descripcio);
+            if (d.color) setColor(d.color); if (d.consistencia) setConsistencia(d.consistencia);
+            if (d.cronologia) setCronologia(d.cronologia); if (d.criteri) setCriteri(d.criteri);
             if (d.visibility) setVisibility(d.visibility);
           }}
         />
@@ -235,9 +175,7 @@ export default function UEForm({ editId }: { editId?: string }) {
                 <Select value={jacimentId} onValueChange={setJacimentId}>
                   <SelectTrigger><SelectValue placeholder="Selecciona un jaciment" /></SelectTrigger>
                   <SelectContent>
-                    {jaciments.map((j) => (
-                      <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>
-                    ))}
+                    {jaciments.map(j => <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -264,15 +202,15 @@ export default function UEForm({ editId }: { editId?: string }) {
           <AccordionItem value="relacions">
             <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Relacions estratigràfiques</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
-              <Field label="Igual a" value={igualA} onChange={setIgualA} />
-              <Field label="Tallat per" value={tallatPer} onChange={setTallatPer} />
-              <Field label="Es recolza a" value={esRecolzaA} onChange={setEsRecolzaA} />
-              <Field label="Se li recolza" value={seLiRecolza} onChange={setSeLiRecolza} />
-              <Field label="Talla" value={talla} onChange={setTalla} />
-              <Field label="Reomplert per" value={reomplertPer} onChange={setReomplertPer} />
-              <Field label="Cobert per" value={cobertPer} onChange={setCobertPer} />
-              <Field label="Reomple a" value={reompleA} onChange={setReompleA} />
-              <Field label="Cobreix a" value={cobreixA} onChange={setCobreixA} />
+              <UERelationSelect label="Igual a" value={igualA} onChange={setIgualA} {...relationProps} />
+              <UERelationSelect label="Tallat per" value={tallatPer} onChange={setTallatPer} {...relationProps} />
+              <UERelationSelect label="Es recolza a" value={esRecolzaA} onChange={setEsRecolzaA} {...relationProps} />
+              <UERelationSelect label="Se li recolza" value={seLiRecolza} onChange={setSeLiRecolza} {...relationProps} />
+              <UERelationSelect label="Talla" value={talla} onChange={setTalla} {...relationProps} />
+              <UERelationSelect label="Reomplert per" value={reomplertPer} onChange={setReomplertPer} {...relationProps} />
+              <UERelationSelect label="Cobert per" value={cobertPer} onChange={setCobertPer} {...relationProps} />
+              <UERelationSelect label="Reomple a" value={reompleA} onChange={setReompleA} {...relationProps} />
+              <UERelationSelect label="Cobreix a" value={cobreixA} onChange={setCobreixA} {...relationProps} />
             </AccordionContent>
           </AccordionItem>
 

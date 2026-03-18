@@ -14,8 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      change_logs: {
+        Row: {
+          changes: Json
+          created_at: string
+          id: string
+          record_id: string
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          changes?: Json
+          created_at?: string
+          id?: string
+          record_id: string
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          changes?: Json
+          created_at?: string
+          id?: string
+          record_id?: string
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       jaciments: {
         Row: {
+          closed: boolean
           created_at: string
           created_by: string
           description: string | null
@@ -31,6 +59,7 @@ export type Database = {
           visibility: Database["public"]["Enums"]["visibility_type"]
         }
         Insert: {
+          closed?: boolean
           created_at?: string
           created_by: string
           description?: string | null
@@ -46,6 +75,7 @@ export type Database = {
           visibility?: Database["public"]["Enums"]["visibility_type"]
         }
         Update: {
+          closed?: boolean
           created_at?: string
           created_by?: string
           description?: string | null
@@ -86,6 +116,39 @@ export type Database = {
           read?: boolean
           receiver_id?: string
           sender_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
