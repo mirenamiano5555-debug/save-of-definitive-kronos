@@ -37,7 +37,7 @@ export default function SearchPage() {
     } else if (tab === "jaciments") {
       let qb = supabase.from("jaciments").select("*")
         .or(`name.ilike.${q},period.ilike.${q},description.ilike.${q},entity.ilike.${q}`);
-      if (filters.visibility) qb = qb.eq("visibility", filters.visibility);
+      if (filters.visibility) qb = qb.eq("visibility", filters.visibility as any);
       if (filters.dateFrom) qb = qb.gte("created_at", filters.dateFrom);
       if (filters.dateTo) qb = qb.lte("created_at", filters.dateTo + "T23:59:59");
       const { data: d } = await qb.limit(50);
@@ -45,7 +45,7 @@ export default function SearchPage() {
     } else {
       let qb = supabase.from("ues").select("*,jaciments(name)")
         .or(`codi_ue.ilike.${q},descripcio.ilike.${q},zona.ilike.${q},campanya.ilike.${q},sector.ilike.${q},cronologia.ilike.${q},interpretacio.ilike.${q},terme_municipal.ilike.${q},comarca.ilike.${q}`);
-      if (filters.visibility) qb = qb.eq("visibility", filters.visibility);
+      if (filters.visibility) qb = qb.eq("visibility", filters.visibility as any);
       if (filters.campanya) qb = qb.ilike("campanya", `%${filters.campanya}%`);
       if (filters.dateFrom) qb = qb.gte("created_at", filters.dateFrom);
       if (filters.dateTo) qb = qb.lte("created_at", filters.dateTo + "T23:59:59");
