@@ -13,15 +13,16 @@ import { toast } from "sonner";
 import ImageUpload from "@/components/ImageUpload";
 import TemplateManager from "@/components/TemplateManager";
 import UERelationSelect from "@/components/UERelationSelect";
+import SketchPad from "@/components/SketchPad";
 
 interface Jaciment { id: string; name: string; }
 interface UEOption { id: string; codi_ue: string | null; }
 
-function Field({ label, value, onChange, textarea }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean }) {
+function Field({ label, value, onChange, textarea, type }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean; type?: string }) {
   return (
     <div>
       <Label>{label}</Label>
-      {textarea ? <Textarea value={value} onChange={e => onChange(e.target.value)} /> : <Input value={value} onChange={e => onChange(e.target.value)} />}
+      {textarea ? <Textarea value={value} onChange={e => onChange(e.target.value)} /> : <Input type={type || "text"} value={value} onChange={e => onChange(e.target.value)} />}
     </div>
   );
 }
@@ -71,6 +72,9 @@ export default function UEForm({ editId }: { editId?: string }) {
   const [visibility, setVisibility] = useState<string>("public");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [cotaSuperior, setCotaSuperior] = useState("");
+  const [cotaInferior, setCotaInferior] = useState("");
+  const [croquisUrl, setCroquisUrl] = useState("");
 
   useEffect(() => {
     supabase.from("jaciments").select("id, name").then(({ data }) => { if (data) setJaciments(data); });
@@ -84,23 +88,14 @@ export default function UEForm({ editId }: { editId?: string }) {
 
   useEffect(() => { fetchUEOptions(); }, [fetchUEOptions]);
 
-  // Auto-generate UE code when jaciment is selected and code is empty
   const generateUECode = useCallback(async () => {
     if (!jacimentId || codiUe || editId) return;
-    const { data } = await supabase
-      .from("ues")
-      .select("codi_ue")
-      .eq("jaciment_id", jacimentId);
+    const { data } = await supabase.from("ues").select("codi_ue").eq("jaciment_id", jacimentId);
     const existingNums = (data || [])
-      .map(ue => {
-        const match = ue.codi_ue?.match(/^UE-(\d+)$/);
-        return match ? parseInt(match[1]) : 0;
-      })
+      .map(ue => { const match = ue.codi_ue?.match(/^UE-(\d+)$/); return match ? parseInt(match[1]) : 0; })
       .filter(n => n > 0);
     const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
-    if (nextNum <= 999) {
-      setCodiUe(`UE-${String(nextNum).padStart(3, "0")}`);
-    }
+    if (nextNum <= 999) setCodiUe(`UE-${String(nextNum).padStart(3, "0")}`);
   }, [jacimentId, codiUe, editId]);
 
   useEffect(() => { generateUECode(); }, [generateUECode]);
@@ -122,6 +117,8 @@ export default function UEForm({ editId }: { editId?: string }) {
           setAntracologia(data.antracologia || ""); setFauna(data.fauna || ""); setMetalls(data.metalls || "");
           setObservacions(data.observacions || ""); setImageUrl(data.image_url || ""); setVisibility(data.visibility);
           setLatitude(data.latitude); setLongitude(data.longitude);
+          setCotaSuperior((data as any).cota_superior?.toString() || "");
+          setCotaInferior((data as any).cota_inferior?.toString() || "");
         }
       });
     }
@@ -132,13 +129,15 @@ export default function UEForm({ editId }: { editId?: string }) {
     if (!user || !jacimentId) { toast.error("Selecciona un jaciment"); return; }
     setLoading(true);
 
-    const payload = {
+    const payload: any = {
       jaciment_id: jacimentId, codi_ue: codiUe, campanya, terme_municipal: termeMunicipal, comarca, zona, sector, ambit, fet,
       descripcio, color, consistencia, igual_a: igualA, tallat_per: tallatPer, es_recolza_a: esRecolzaA,
       se_li_recolza: seLiRecolza, talla, reomplert_per: reomplertPer, cobert_per: cobertPer, reomple_a: reompleA,
       cobreix_a: cobreixA, interpretacio, cronologia, criteri, materials, planta, seccio, fotografia, sediment,
-      carpologia, antracologia, fauna, metalls, observacions, image_url: imageUrl, visibility: visibility as any,
-      latitude, longitude, created_by: user.id,
+      carpologia, antracologia, fauna, metalls, observacions, image_url: imageUrl || croquisUrl || null,
+      visibility: visibility as any, latitude, longitude, created_by: user.id,
+      cota_superior: cotaSuperior ? parseFloat(cotaSuperior) : null,
+      cota_inferior: cotaInferior ? parseFloat(cotaInferior) : null,
     };
 
     let error;
@@ -148,12 +147,9 @@ export default function UEForm({ editId }: { editId?: string }) {
       ({ error } = await supabase.from("ues").insert(payload));
     }
 
-    // Log the change
     if (!error) {
       await supabase.from("change_logs").insert({
-        table_name: "ues",
-        record_id: editId || "new",
-        user_id: user.id,
+        table_name: "ues", record_id: editId || "new", user_id: user.id,
         changes: editId ? { action: "update", fields: payload } : { action: "create" },
       } as any);
     }
@@ -163,7 +159,7 @@ export default function UEForm({ editId }: { editId?: string }) {
     setLoading(false);
   };
 
-  const relationProps = { ueOptions, jacimentId, onUECreated: fetchUEOptions };
+  const relationProps = { ueOptions, jacimentId, onUECreated: fetchUEOptions, currentUECode: codiUe };
 
   return (
     <div className="min-h-screen bg-background">
@@ -187,7 +183,7 @@ export default function UEForm({ editId }: { editId?: string }) {
           }}
         />
 
-        <Accordion type="multiple" defaultValue={["identificacio", "descripcio", "relacions", "interpretacio", "documentacio", "mostres", "final"]} className="space-y-2">
+        <Accordion type="multiple" defaultValue={["identificacio", "descripcio", "relacions", "cotes", "interpretacio", "documentacio", "croquis", "mostres", "final"]} className="space-y-2">
           <AccordionItem value="identificacio">
             <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Dades identificatives</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
@@ -220,18 +216,26 @@ export default function UEForm({ editId }: { editId?: string }) {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="cotes">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Cotes</AccordionTrigger>
+            <AccordionContent className="space-y-3 pt-2">
+              <Field label="Cota superior (m)" value={cotaSuperior} onChange={setCotaSuperior} type="number" />
+              <Field label="Cota inferior (m)" value={cotaInferior} onChange={setCotaInferior} type="number" />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="relacions">
             <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Relacions estratigràfiques</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
-              <UERelationSelect label="Igual a" value={igualA} onChange={setIgualA} {...relationProps} />
-              <UERelationSelect label="Tallat per" value={tallatPer} onChange={setTallatPer} {...relationProps} />
-              <UERelationSelect label="Es recolza a" value={esRecolzaA} onChange={setEsRecolzaA} {...relationProps} />
-              <UERelationSelect label="Se li recolza" value={seLiRecolza} onChange={setSeLiRecolza} {...relationProps} />
-              <UERelationSelect label="Talla" value={talla} onChange={setTalla} {...relationProps} />
-              <UERelationSelect label="Reomplert per" value={reomplertPer} onChange={setReomplertPer} {...relationProps} />
-              <UERelationSelect label="Cobert per" value={cobertPer} onChange={setCobertPer} {...relationProps} />
-              <UERelationSelect label="Reomple a" value={reompleA} onChange={setReompleA} {...relationProps} />
-              <UERelationSelect label="Cobreix a" value={cobreixA} onChange={setCobreixA} {...relationProps} />
+              <UERelationSelect label="Igual a" value={igualA} onChange={setIgualA} fieldName="igual_a" {...relationProps} />
+              <UERelationSelect label="Tallat per" value={tallatPer} onChange={setTallatPer} fieldName="tallat_per" {...relationProps} />
+              <UERelationSelect label="Es recolza a" value={esRecolzaA} onChange={setEsRecolzaA} fieldName="es_recolza_a" {...relationProps} />
+              <UERelationSelect label="Se li recolza" value={seLiRecolza} onChange={setSeLiRecolza} fieldName="se_li_recolza" {...relationProps} />
+              <UERelationSelect label="Talla" value={talla} onChange={setTalla} fieldName="talla" {...relationProps} />
+              <UERelationSelect label="Reomplert per" value={reomplertPer} onChange={setReomplertPer} fieldName="reomplert_per" {...relationProps} />
+              <UERelationSelect label="Cobert per" value={cobertPer} onChange={setCobertPer} fieldName="cobert_per" {...relationProps} />
+              <UERelationSelect label="Reomple a" value={reompleA} onChange={setReompleA} fieldName="reomple_a" {...relationProps} />
+              <UERelationSelect label="Cobreix a" value={cobreixA} onChange={setCobreixA} fieldName="cobreix_a" {...relationProps} />
             </AccordionContent>
           </AccordionItem>
 
@@ -254,6 +258,13 @@ export default function UEForm({ editId }: { editId?: string }) {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="croquis">
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Croquis</AccordionTrigger>
+            <AccordionContent className="pt-2">
+              <SketchPad value={croquisUrl} onChange={setCroquisUrl} folder="croquis" />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="mostres">
             <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Mostres</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
@@ -269,7 +280,7 @@ export default function UEForm({ editId }: { editId?: string }) {
             <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Final</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <Field label="Observacions" value={observacions} onChange={setObservacions} textarea />
-              <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge (opcional)" folder="ues" />
+              <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatges (opcional)" folder="ues" multiple />
               <div>
                 <Label>Visibilitat</Label>
                 <Select value={visibility} onValueChange={setVisibility}>

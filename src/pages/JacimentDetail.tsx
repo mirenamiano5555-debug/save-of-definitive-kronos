@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit, Trash2, QrCode, Info, Layers, Box, Lock, Unlock, GitBranch } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, QrCode, Info, Layers, Box, Lock, Unlock, GitBranch, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import ExportButtons from "@/components/ExportButtons";
 import ChangeLog from "@/components/ChangeLog";
@@ -16,6 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import JacimentQREditor from "@/components/JacimentQREditor";
+import MassExport from "@/components/MassExport";
 import { Badge } from "@/components/ui/badge";
 
 export default function JacimentDetail() {
@@ -123,6 +124,9 @@ export default function JacimentDetail() {
               <TabsTrigger value="objectes" className="flex-1 gap-1 text-xs">
                 <Box className="h-3 w-3" /> Obj ({objectes.length})
               </TabsTrigger>
+              <TabsTrigger value="exportar" className="flex-1 gap-1 text-xs">
+                <FileDown className="h-3 w-3" /> Exportar
+              </TabsTrigger>
               <TabsTrigger value="harris" className="flex-1 gap-1 text-xs">
                 <GitBranch className="h-3 w-3" /> Harris
               </TabsTrigger>
@@ -209,6 +213,15 @@ export default function JacimentDetail() {
                   </div>
                 </button>
               ))}
+            </TabsContent>
+
+            <TabsContent value="exportar" className="mt-4 space-y-3">
+              <h3 className="font-serif font-semibold">Exportar tot el jaciment</h3>
+              <p className="text-sm text-muted-foreground">Exporta totes les UEs i objectes d'aquest jaciment en un sol PDF.</p>
+              <div className="flex gap-2 flex-wrap">
+                <MassExport items={ues} type="ues" />
+                <MassExport items={objectes} type="objectes" />
+              </div>
             </TabsContent>
 
             <TabsContent value="harris" className="mt-4 space-y-3">

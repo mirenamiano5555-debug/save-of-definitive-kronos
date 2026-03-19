@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Upload, Search, PenLine, Smartphone, Map, Plus, User, MessageSquare, LogOut } from "lucide-react";
+import { Upload, Search, PenLine, Smartphone, Map, Plus, User, MessageSquare, LogOut, Bot } from "lucide-react";
 import logoKronos from "@/assets/logo-kronos.png";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -18,6 +18,7 @@ export default function HomePage() {
     { icon: Search, title: "Cercar", description: "Busca objectes, jaciments i UEs amb filtres avançats.", onClick: () => navigate("/search") },
     { icon: PenLine, title: "Els Meus Ítems", description: "Gestiona les teves troballes. Exporta múltiples fitxes alhora.", onClick: () => navigate("/my-items") },
     { icon: Map, title: "Mapa de Jaciments", description: "Visualitza tots els jaciments públics en un mapa interactiu.", onClick: () => navigate("/map") },
+    { icon: Bot, title: "Assistent IA", description: "Xatbot intel·ligent amb accés a totes les dades per ajudar-te.", onClick: () => navigate("/ai-assistant") },
   ];
 
   return (
