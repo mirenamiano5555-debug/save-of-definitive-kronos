@@ -84,6 +84,27 @@ export default function UEForm({ editId }: { editId?: string }) {
 
   useEffect(() => { fetchUEOptions(); }, [fetchUEOptions]);
 
+  // Auto-generate UE code when jaciment is selected and code is empty
+  const generateUECode = useCallback(async () => {
+    if (!jacimentId || codiUe || editId) return;
+    const { data } = await supabase
+      .from("ues")
+      .select("codi_ue")
+      .eq("jaciment_id", jacimentId);
+    const existingNums = (data || [])
+      .map(ue => {
+        const match = ue.codi_ue?.match(/^UE-(\d+)$/);
+        return match ? parseInt(match[1]) : 0;
+      })
+      .filter(n => n > 0);
+    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+    if (nextNum <= 999) {
+      setCodiUe(`UE-${String(nextNum).padStart(3, "0")}`);
+    }
+  }, [jacimentId, codiUe, editId]);
+
+  useEffect(() => { generateUECode(); }, [generateUECode]);
+
   useEffect(() => {
     if (editId) {
       supabase.from("ues").select("*").eq("id", editId).single().then(({ data }) => {

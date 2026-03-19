@@ -55,7 +55,7 @@ export default function MapPage() {
         <h1 className="text-xl font-serif font-bold">Mapa de jaciments</h1>
       </header>
 
-      <div className="h-[calc(100vh-57px)]">
+      <div className="h-[calc(100vh-57px)]" style={{ zIndex: 0 }}>
         <MapContainer center={center} zoom={7} className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
