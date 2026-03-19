@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createRoot } from "react-dom/client";
+import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,10 +86,7 @@ function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageEleme
     // Actually, let's use the canvas from qrcode.react's toDataURL
     
     // Simpler: create a React root and render QRCodeSVG, then grab the SVG
-    import("react-dom/client").then((ReactDOM) => {
-      import("react").then((React) => {
-        import("qrcode.react").then(({ QRCodeSVG }) => {
-          const root = ReactDOM.createRoot(container);
+    const root = createRoot(container);
           root.render(
             React.createElement(QRCodeSVG, {
               value: url,
@@ -128,9 +127,6 @@ function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageEleme
               img.src = svgUrl;
             });
           });
-        });
-      });
-    });
   });
 }
 
