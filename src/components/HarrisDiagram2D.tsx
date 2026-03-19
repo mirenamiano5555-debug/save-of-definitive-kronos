@@ -146,7 +146,8 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
 
     const w = canvas.offsetWidth;
     const h = canvas.offsetHeight;
-    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#f5f0e8";
+    ctx.fillRect(0, 0, w, h);
 
     ctx.save();
     ctx.translate(w / 2 + pan.x, 40 + pan.y);
