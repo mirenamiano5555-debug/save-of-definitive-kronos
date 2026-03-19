@@ -146,7 +146,8 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
 
     const w = canvas.offsetWidth;
     const h = canvas.offsetHeight;
-    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#f5f0e8";
+    ctx.fillRect(0, 0, w, h);
 
     ctx.save();
     ctx.translate(w / 2 + pan.x, 40 + pan.y);
@@ -179,16 +180,16 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
 
     // Draw nodes
     for (const node of nodes) {
-      ctx.fillStyle = "hsl(var(--card))";
-      ctx.strokeStyle = "hsl(var(--border))";
-      ctx.lineWidth = 1;
+      ctx.fillStyle = "#f5f0e8";
+      ctx.strokeStyle = "#8b7355";
+      ctx.lineWidth = 1.5;
       const bw = 80, bh = 28;
       ctx.beginPath();
       ctx.roundRect(node.x - bw / 2, node.y - bh / 2, bw, bh, 4);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = "hsl(var(--foreground))";
+      ctx.fillStyle = "#3d2e1f";
       ctx.font = "bold 11px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";

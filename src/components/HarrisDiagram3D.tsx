@@ -42,7 +42,7 @@ function UEBox({ position, label }: { position: [number, number, number]; label:
       <Text
         position={[0, 0.35, 0]}
         fontSize={0.2}
-        color="white"
+        color="#3d2e1f"
         anchorX="center"
         anchorY="bottom"
       >
