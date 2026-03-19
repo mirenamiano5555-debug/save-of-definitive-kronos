@@ -212,6 +212,15 @@ export default function JacimentDetail() {
               ))}
             </TabsContent>
 
+            <TabsContent value="exportar" className="mt-4 space-y-3">
+              <h3 className="font-serif font-semibold">Exportar tot el jaciment</h3>
+              <p className="text-sm text-muted-foreground">Exporta totes les UEs i objectes d'aquest jaciment en un sol PDF.</p>
+              <div className="flex gap-2 flex-wrap">
+                <MassExport items={ues} type="ues" />
+                <MassExport items={objectes} type="objectes" />
+              </div>
+            </TabsContent>
+
             <TabsContent value="harris" className="mt-4 space-y-3">
               <div className="flex gap-2">
                 <Button size="sm" variant={harrisView === "2d" ? "default" : "outline"} onClick={() => setHarrisView("2d")}>2D</Button>
