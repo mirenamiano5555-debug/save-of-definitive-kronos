@@ -16,6 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import JacimentQREditor from "@/components/JacimentQREditor";
+import MassExport from "@/components/MassExport";
 import { Badge } from "@/components/ui/badge";
 
 export default function JacimentDetail() {
