@@ -96,7 +96,6 @@ function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageEleme
             })
           );
 
-          {
           // Wait for render
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -128,9 +127,6 @@ function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageEleme
               img.src = svgUrl;
             });
           });
-        });
-      });
-    });
   });
 }
 
