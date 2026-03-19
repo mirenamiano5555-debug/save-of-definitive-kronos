@@ -20,6 +20,7 @@ import UEDetail from "./pages/UEDetail";
 import { EditJaciment, EditUE, EditObjecte } from "./pages/EditPages";
 import MessagesPage from "./pages/MessagesPage";
 import MapPage from "./pages/MapPage";
+import AIAssistantPage from "./pages/AIAssistantPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
