@@ -124,6 +124,9 @@ export default function JacimentDetail() {
               <TabsTrigger value="objectes" className="flex-1 gap-1 text-xs">
                 <Box className="h-3 w-3" /> Obj ({objectes.length})
               </TabsTrigger>
+              <TabsTrigger value="exportar" className="flex-1 gap-1 text-xs">
+                <FileDown className="h-3 w-3" /> Exportar
+              </TabsTrigger>
               <TabsTrigger value="harris" className="flex-1 gap-1 text-xs">
                 <GitBranch className="h-3 w-3" /> Harris
               </TabsTrigger>

@@ -146,6 +146,8 @@ export default function UEDetail() {
               </div>
               <Row label="Jaciment" value={jacimentName} />
               <Row label="Codi UE" value={item.codi_ue} />
+              <Row label="Cota superior" value={item.cota_superior?.toString()} />
+              <Row label="Cota inferior" value={item.cota_inferior?.toString()} />
               <Row label="Campanya" value={item.campanya} />
               <Row label="Terme municipal" value={item.terme_municipal} />
               <Row label="Comarca" value={item.comarca} />
