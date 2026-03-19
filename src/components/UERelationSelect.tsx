@@ -21,14 +21,44 @@ interface UERelationSelectProps {
   ueOptions: UEOption[];
   onUECreated?: () => void;
   jacimentId: string;
+  /** The field name for this relation (e.g. "tallat_per") */
+  fieldName?: string;
+  /** The codi_ue of the current UE being edited */
+  currentUECode?: string;
 }
 
-export default function UERelationSelect({ label, value, onChange, ueOptions, onUECreated, jacimentId }: UERelationSelectProps) {
+// Inverse relation map
+const INVERSE_MAP: Record<string, string> = {
+  cobreix_a: "cobert_per",
+  cobert_per: "cobreix_a",
+  talla: "tallat_per",
+  tallat_per: "talla",
+  reomple_a: "reomplert_per",
+  reomplert_per: "reomple_a",
+  es_recolza_a: "se_li_recolza",
+  se_li_recolza: "es_recolza_a",
+  igual_a: "igual_a",
+};
+
+const LABEL_TO_FIELD: Record<string, string> = {
+  "Cobreix a": "cobreix_a",
+  "Cobert per": "cobert_per",
+  "Talla": "talla",
+  "Tallat per": "tallat_per",
+  "Reomple a": "reomple_a",
+  "Reomplert per": "reomplert_per",
+  "Es recolza a": "es_recolza_a",
+  "Se li recolza": "se_li_recolza",
+  "Igual a": "igual_a",
+};
+
+export default function UERelationSelect({ label, value, onChange, ueOptions, onUECreated, jacimentId, fieldName, currentUECode }: UERelationSelectProps) {
   const { user } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
   const [newUEName, setNewUEName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  const resolvedFieldName = fieldName || LABEL_TO_FIELD[label];
   const selectedCodes = value ? value.split(",").map(s => s.trim()).filter(Boolean) : [];
 
   const toggleUE = (code: string) => {
@@ -43,18 +73,52 @@ export default function UERelationSelect({ label, value, onChange, ueOptions, on
     onChange(selectedCodes.filter(c => c !== code).join(", "));
   };
 
+  const updateInverseRelation = async (targetUECode: string, sourceUECode: string) => {
+    if (!resolvedFieldName || !sourceUECode) return;
+    const inverseField = INVERSE_MAP[resolvedFieldName];
+    if (!inverseField) return;
+
+    // Find the target UE
+    const targetUE = ueOptions.find(ue => ue.codi_ue === targetUECode);
+    if (!targetUE) return;
+
+    // Get current value of inverse field
+    const { data } = await supabase.from("ues").select(inverseField).eq("id", targetUE.id).single();
+    if (!data) return;
+
+    const currentInverse = (data as any)[inverseField] || "";
+    const codes = currentInverse ? currentInverse.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
+    if (!codes.includes(sourceUECode)) {
+      codes.push(sourceUECode);
+      await supabase.from("ues").update({ [inverseField]: codes.join(", ") } as any).eq("id", targetUE.id);
+    }
+  };
+
   const createProvisionalUE = async () => {
     if (!newUEName.trim() || !user || !jacimentId) return;
     setCreating(true);
-    const { error } = await supabase.from("ues").insert({
+
+    // Build the provisional UE with inverse relation pre-filled
+    const inverseField = resolvedFieldName ? INVERSE_MAP[resolvedFieldName] : undefined;
+    const insertData: any = {
       codi_ue: newUEName.trim(),
       jaciment_id: jacimentId,
       created_by: user.id,
       visibility: "esbos" as any,
-    });
+    };
+
+    // Pre-fill the inverse relation if we know the current UE code
+    if (inverseField && currentUECode) {
+      insertData[inverseField] = currentUECode;
+    }
+
+    const { error } = await supabase.from("ues").insert(insertData);
     if (error) toast.error(error.message);
     else {
-      toast.success(`UE provisional "${newUEName.trim()}" creada`);
+      toast.success(`UE provisional "${newUEName.trim()}" creada amb relació inversa`);
+      // Also add this new UE to the current selection
+      const newCodes = [...selectedCodes, newUEName.trim()];
+      onChange(newCodes.join(", "));
       setNewUEName("");
       setShowCreate(false);
       onUECreated?.();
@@ -79,7 +143,13 @@ export default function UERelationSelect({ label, value, onChange, ueOptions, on
             key={ue.id}
             variant={selectedCodes.includes(ue.codi_ue!) ? "default" : "outline"}
             className="cursor-pointer"
-            onClick={() => toggleUE(ue.codi_ue!)}
+            onClick={() => {
+              toggleUE(ue.codi_ue!);
+              // Update inverse relation when selecting
+              if (!selectedCodes.includes(ue.codi_ue!) && currentUECode) {
+                updateInverseRelation(ue.codi_ue!, currentUECode);
+              }
+            }}
           >
             {ue.codi_ue}
           </Badge>
@@ -101,8 +171,13 @@ export default function UERelationSelect({ label, value, onChange, ueOptions, on
           <div className="space-y-3">
             <div>
               <Label>Codi UE</Label>
-              <Input value={newUEName} onChange={e => setNewUEName(e.target.value)} placeholder="Ex: UE 001" />
+              <Input value={newUEName} onChange={e => setNewUEName(e.target.value)} placeholder="Ex: UE-025" />
             </div>
+            {resolvedFieldName && currentUECode && (
+              <p className="text-xs text-muted-foreground">
+                La nova UE tindrà automàticament la relació inversa amb {currentUECode}.
+              </p>
+            )}
             <Button onClick={createProvisionalUE} disabled={creating || !newUEName.trim()} className="w-full">
               {creating ? "Creant..." : "Crear"}
             </Button>
