@@ -139,6 +139,8 @@ export default function UEDetail() {
                     { label: "Fauna", value: item.fauna },
                     { label: "Metalls", value: item.metalls },
                     { label: "Observacions", value: item.observacions },
+                    { label: "Cota superior", value: item.cota_superior?.toString() },
+                    { label: "Cota inferior", value: item.cota_inferior?.toString() },
                   ]}
                 />
               </div>
