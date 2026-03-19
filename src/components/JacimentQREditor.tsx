@@ -86,10 +86,7 @@ function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageEleme
     // Actually, let's use the canvas from qrcode.react's toDataURL
     
     // Simpler: create a React root and render QRCodeSVG, then grab the SVG
-    import("react-dom/client").then((ReactDOM) => {
-      import("react").then((React) => {
-        import("qrcode.react").then(({ QRCodeSVG }) => {
-          const root = ReactDOM.createRoot(container);
+    const root = createRoot(container);
           root.render(
             React.createElement(QRCodeSVG, {
               value: url,
@@ -99,6 +96,7 @@ function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageEleme
             })
           );
 
+          {
           // Wait for render
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
