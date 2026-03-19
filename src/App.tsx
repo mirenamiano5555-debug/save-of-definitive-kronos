@@ -58,6 +58,7 @@ const AppRoutes = () => (
     <Route path="/edit/objecte/:id" element={<ProtectedRoute><EditObjecte /></ProtectedRoute>} />
     <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
     <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
+    <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistantPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
