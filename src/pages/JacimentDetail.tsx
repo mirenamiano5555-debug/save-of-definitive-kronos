@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit, Trash2, QrCode, Info, Layers, Box, Lock, Unlock, GitBranch } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, QrCode, Info, Layers, Box, Lock, Unlock, GitBranch, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import ExportButtons from "@/components/ExportButtons";
 import ChangeLog from "@/components/ChangeLog";
