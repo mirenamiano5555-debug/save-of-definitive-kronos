@@ -317,6 +317,8 @@ export type Database = {
           color: string | null
           comarca: string | null
           consistencia: string | null
+          cota_inferior: number | null
+          cota_superior: number | null
           created_at: string
           created_by: string
           criteri: string | null
@@ -362,6 +364,8 @@ export type Database = {
           color?: string | null
           comarca?: string | null
           consistencia?: string | null
+          cota_inferior?: number | null
+          cota_superior?: number | null
           created_at?: string
           created_by: string
           criteri?: string | null
@@ -407,6 +411,8 @@ export type Database = {
           color?: string | null
           comarca?: string | null
           consistencia?: string | null
+          cota_inferior?: number | null
+          cota_superior?: number | null
           created_at?: string
           created_by?: string
           criteri?: string | null
