@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, CheckCircle, Search } from "lucide-react";
+import { AlertTriangle, CheckCircle, Search, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Issue {
@@ -10,9 +10,9 @@ interface Issue {
   message: string;
   ues: string[];
   suggestion: string;
+  fix?: () => Promise<void>;
 }
 
-// Relation pairs that are inverses (if A cobreix B, then B is cobert_per A)
 const INVERSE_PAIRS: [string, string][] = [
   ["cobreix_a", "cobert_per"],
   ["talla", "tallat_per"],
@@ -21,18 +21,11 @@ const INVERSE_PAIRS: [string, string][] = [
 ];
 
 const RELATION_LABELS: Record<string, string> = {
-  cobreix_a: "cobreix a",
-  cobert_per: "cobert per",
-  talla: "talla",
-  tallat_per: "tallat per",
-  reomple_a: "reomple a",
-  reomplert_per: "reomplert per",
-  es_recolza_a: "es recolza a",
-  se_li_recolza: "se li recolza",
-  igual_a: "igual a",
+  cobreix_a: "cobreix a", cobert_per: "cobert per", talla: "talla", tallat_per: "tallat per",
+  reomple_a: "reomple a", reomplert_per: "reomplert per", es_recolza_a: "es recolza a",
+  se_li_recolza: "se li recolza", igual_a: "igual a",
 };
 
-// "Anteriority" relations: if A does X to B, A is stratigraphically later
 const LATER_RELATIONS = ["cobreix_a", "talla", "reomple_a"];
 const EARLIER_RELATIONS = ["cobert_per", "tallat_per", "reomplert_per"];
 
@@ -45,6 +38,7 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
   const [issues, setIssues] = useState<Issue[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzed, setAnalyzed] = useState(false);
+  const [fixing, setFixing] = useState(false);
 
   const analyze = async () => {
     setAnalyzing(true);
@@ -53,104 +47,67 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
       .select("id, codi_ue, cobreix_a, cobert_per, talla, tallat_per, reomple_a, reomplert_per, es_recolza_a, se_li_recolza, igual_a")
       .eq("jaciment_id", jacimentId);
 
-    if (!ues || ues.length === 0) {
-      setIssues([]);
-      setAnalyzed(true);
-      setAnalyzing(false);
-      return;
-    }
+    if (!ues || ues.length === 0) { setIssues([]); setAnalyzed(true); setAnalyzing(false); return; }
 
     const foundIssues: Issue[] = [];
     const ueMap = new Map(ues.map(ue => [ue.codi_ue || ue.id.slice(0, 8), ue]));
-
-    // Build directed graph for temporal ordering
-    // Edge A -> B means A is later than B
     const laterThan = new Map<string, Set<string>>();
     const allCodes = [...ueMap.keys()];
     allCodes.forEach(code => laterThan.set(code, new Set()));
 
     for (const ue of ues) {
       const code = ue.codi_ue || ue.id.slice(0, 8);
-
       for (const rel of LATER_RELATIONS) {
-        const targets = parseRelations((ue as any)[rel]);
-        for (const t of targets) {
-          laterThan.get(code)?.add(t);
-        }
+        for (const t of parseRelations((ue as any)[rel])) laterThan.get(code)?.add(t);
       }
-
       for (const rel of EARLIER_RELATIONS) {
-        const targets = parseRelations((ue as any)[rel]);
-        for (const t of targets) {
-          laterThan.get(t)?.add(code);
-        }
+        for (const t of parseRelations((ue as any)[rel])) laterThan.get(t)?.add(code);
       }
     }
 
-    // Detect circular dependencies (cycles in the graph)
+    // Cycles
     const visited = new Set<string>();
     const inStack = new Set<string>();
     const cyclePaths: string[][] = [];
-
-    function dfs(node: string, path: string[]): boolean {
-      if (inStack.has(node)) {
-        const cycleStart = path.indexOf(node);
-        cyclePaths.push(path.slice(cycleStart));
-        return true;
-      }
-      if (visited.has(node)) return false;
-      visited.add(node);
-      inStack.add(node);
-      path.push(node);
-
-      for (const neighbor of laterThan.get(node) || []) {
-        dfs(neighbor, [...path]);
-      }
-
+    function dfs(node: string, path: string[]) {
+      if (inStack.has(node)) { cyclePaths.push(path.slice(path.indexOf(node))); return; }
+      if (visited.has(node)) return;
+      visited.add(node); inStack.add(node); path.push(node);
+      for (const neighbor of laterThan.get(node) || []) dfs(neighbor, [...path]);
       inStack.delete(node);
-      return false;
     }
-
-    for (const code of allCodes) {
-      if (!visited.has(code)) {
-        dfs(code, []);
-      }
-    }
-
+    for (const code of allCodes) if (!visited.has(code)) dfs(code, []);
     for (const cycle of cyclePaths) {
-      foundIssues.push({
-        type: "circular",
-        message: `Bucle estratigràfic detectat: ${cycle.join(" → ")} → ${cycle[0]}`,
-        ues: cycle,
-        suggestion: `Revisa les relacions entre ${cycle[0]} i ${cycle[cycle.length - 1]} per trencar el bucle.`,
-      });
+      foundIssues.push({ type: "circular", message: `Bucle: ${cycle.join(" → ")} → ${cycle[0]}`, ues: cycle, suggestion: `Revisa les relacions per trencar el bucle.` });
     }
 
-    // Detect contradictions: A is both later and earlier than B
+    // Contradictions
     for (const ue of ues) {
       const code = ue.codi_ue || ue.id.slice(0, 8);
-
       for (const [laterRel, earlierRel] of INVERSE_PAIRS) {
         const laterTargets = parseRelations((ue as any)[laterRel]);
         const earlierTargets = parseRelations((ue as any)[earlierRel]);
-
         for (const t of laterTargets) {
           if (earlierTargets.includes(t)) {
             foundIssues.push({
               type: "contradiction",
               message: `${code} ${RELATION_LABELS[laterRel]} ${t} però també ${RELATION_LABELS[earlierRel]} ${t}`,
               ues: [code, t],
-              suggestion: `Revisa la relació entre ${code} i ${t}. No pot ser ${RELATION_LABELS[laterRel]} i ${RELATION_LABELS[earlierRel]} alhora.`,
+              suggestion: `Elimina una de les dues relacions contradictòries.`,
+              fix: async () => {
+                // Remove the "earlier" relation to fix contradiction
+                const updated = earlierTargets.filter(x => x !== t).join(", ");
+                await supabase.from("ues").update({ [earlierRel]: updated || null } as any).eq("id", ue.id);
+              }
             });
           }
         }
       }
     }
 
-    // Check inverse consistency
+    // Inverse consistency
     for (const ue of ues) {
       const code = ue.codi_ue || ue.id.slice(0, 8);
-
       for (const [rel, inverseRel] of INVERSE_PAIRS) {
         const targets = parseRelations((ue as any)[rel]);
         for (const t of targets) {
@@ -162,7 +119,11 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
                 type: "duplicate",
                 message: `${code} ${RELATION_LABELS[rel]} ${t}, però ${t} no té ${code} com a "${RELATION_LABELS[inverseRel]}"`,
                 ues: [code, t],
-                suggestion: `Afegeix "${code}" al camp "${RELATION_LABELS[inverseRel]}" de ${t} per mantenir la coherència.`,
+                suggestion: `Afegeix "${code}" al camp "${RELATION_LABELS[inverseRel]}" de ${t}.`,
+                fix: async () => {
+                  const newVal = [...inverseTargets, code].join(", ");
+                  await supabase.from("ues").update({ [inverseRel]: newVal } as any).eq("id", targetUE.id);
+                }
               });
             }
           }
@@ -170,15 +131,22 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
       }
     }
 
-    // Deduplicate
-    const unique = foundIssues.filter((issue, i, arr) =>
-      arr.findIndex(x => x.message === issue.message) === i
-    );
-
+    const unique = foundIssues.filter((issue, i, arr) => arr.findIndex(x => x.message === issue.message) === i);
     setIssues(unique);
     setAnalyzed(true);
     setAnalyzing(false);
     if (unique.length === 0) toast.success("Cap incoherència detectada!");
+  };
+
+  const autoCorrectAll = async () => {
+    setFixing(true);
+    const fixable = issues.filter(i => i.fix);
+    for (const issue of fixable) {
+      try { await issue.fix!(); } catch (e) { console.error(e); }
+    }
+    toast.success(`${fixable.length} incoherències corregides!`);
+    setFixing(false);
+    analyze(); // Re-analyze
   };
 
   return (
@@ -197,6 +165,13 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
         </Card>
       )}
 
+      {issues.length > 0 && issues.some(i => i.fix) && (
+        <Button onClick={autoCorrectAll} disabled={fixing} variant="outline" className="w-full gap-2">
+          <Wand2 className="h-4 w-4" />
+          {fixing ? "Corregint..." : `Autocorregir ${issues.filter(i => i.fix).length} incoherències`}
+        </Button>
+      )}
+
       {issues.map((issue, i) => (
         <Card key={i} className="border-destructive/30 bg-destructive/5">
           <CardHeader className="pb-2 pt-3 px-4">
@@ -205,9 +180,18 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
               {issue.type === "circular" ? "Bucle circular" : issue.type === "contradiction" ? "Contradicció" : "Inconsistència"}
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-3 space-y-1">
+          <CardContent className="px-4 pb-3 space-y-2">
             <p className="text-sm">{issue.message}</p>
             <p className="text-xs text-muted-foreground italic">{issue.suggestion}</p>
+            {issue.fix && (
+              <Button size="sm" variant="outline" className="h-6 text-xs gap-1" onClick={async () => {
+                await issue.fix!();
+                toast.success("Corregit!");
+                analyze();
+              }}>
+                <Wand2 className="h-3 w-3" /> Corregir
+              </Button>
+            )}
           </CardContent>
         </Card>
       ))}
