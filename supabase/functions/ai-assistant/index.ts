@@ -10,7 +10,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Validate auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -26,24 +25,19 @@ serve(async (req) => {
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
+      console.error("Auth error:", userError?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
-    const { messages, conversationId, action } = await req.json();
+    const { messages, conversationId } = await req.json();
 
     // Use service role for data operations
     const supabase = createClient(supabaseUrl, serviceKey);
-
-    // Handle AI tool actions (create jaciment, UE, objecte)
-    if (action) {
-      return await handleAction(supabase, userId, action, corsHeaders);
-    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -51,8 +45,8 @@ serve(async (req) => {
     // Get context data
     const [jacimentsRes, uesRes, objectesRes] = await Promise.all([
       supabase.from("jaciments").select("id, name, period, entity, closed, latitude, longitude").limit(50),
-      supabase.from("ues").select("id, codi_ue, jaciment_id, cronologia, cota_superior, cota_inferior, cobreix_a, cobert_per, talla, tallat_per").limit(200),
-      supabase.from("objectes").select("id, name, object_id, jaciment_id, tipus, ue_id").limit(200),
+      supabase.from("ues").select("id, codi_ue, jaciment_id, cronologia, cota_superior, cota_inferior, cobreix_a, cobert_per, talla, tallat_per, descripcio, image_url").limit(200),
+      supabase.from("objectes").select("id, name, object_id, jaciment_id, tipus, ue_id, image_url").limit(200),
     ]);
 
     const jaciments = jacimentsRes.data || [];
@@ -66,10 +60,10 @@ JACIMENTS (${jaciments.length}):
 ${jaciments.map(j => `- ${j.name} (ID: ${j.id}, Període: ${j.period || "N/A"}, Estat: ${j.closed ? "Tancat" : "Obert"}, Coords: ${j.latitude ?? "N/A"},${j.longitude ?? "N/A"})`).join("\n")}
 
 UES (${ues.length}):
-${ues.slice(0, 50).map(u => `- ${u.codi_ue || u.id.slice(0, 8)} (Jaciment: ${jaciments.find(j => j.id === u.jaciment_id)?.name || "?"}, Cronologia: ${u.cronologia || "N/A"}, Cota sup: ${u.cota_superior ?? "N/A"}, Cota inf: ${u.cota_inferior ?? "N/A"})`).join("\n")}
+${ues.slice(0, 50).map(u => `- ${u.codi_ue || u.id.slice(0, 8)} (ID: ${u.id}, Jaciment: ${jaciments.find(j => j.id === u.jaciment_id)?.name || "?"}, Cronologia: ${u.cronologia || "N/A"}, Cota sup: ${u.cota_superior ?? "N/A"}, Cota inf: ${u.cota_inferior ?? "N/A"})`).join("\n")}
 
 OBJECTES (${objectes.length}):
-${objectes.slice(0, 50).map(o => `- ${o.name} (${o.object_id}, Tipus: ${o.tipus || "N/A"})`).join("\n")}
+${objectes.slice(0, 50).map(o => `- ${o.name} (${o.object_id}, ID: ${o.id}, Tipus: ${o.tipus || "N/A"}, Jaciment: ${jaciments.find(j => j.id === o.jaciment_id)?.name || "?"})`).join("\n")}
 `;
 
     const systemPrompt = `Ets l'assistent IA de Kronos, una aplicació de documentació arqueològica professional en català.
@@ -83,14 +77,19 @@ CAPACITATS:
 - Proporcionar enllaços a fitxes específiques (format: /jaciment/ID, /ue/ID, /objecte/ID)
 - Ajudar a entendre la matriu de Harris i les relacions entre UEs
 - Respondre preguntes sobre arqueologia en general
-- Processar imatges adjuntes dels usuaris
+- Processar imatges adjuntes dels usuaris i reconèixer el seu contingut
+- Processar PDFs i documents per extreure informació d'UEs i objectes
+- Generar dades plausibles per a camps d'ítems si l'usuari ho demana
 
-REGLES:
+REGLES IMPORTANTS:
 - Respon SEMPRE en català
 - Sigues concís però informatiu
 - Quan referencïis elements, proporciona l'enllaç directe
 - Utilitza format markdown per organitzar les respostes
-- Si l'usuari et demana crear un jaciment, UE o objecte, utilitza les funcions (tools) disponibles per fer-ho directament
+- **CONFIRMACIÓ OBLIGATÒRIA**: Abans de crear QUALSEVOL element (jaciment, UE o objecte), has de mostrar un RESUM COMPLET de les dades que crearàs i demanar confirmació explícita a l'usuari amb un missatge com "Vols que creï aquest registre?". NO creis res sense que l'usuari digui explícitament "sí", "confirmo", "endavant", "crea-ho" o similar.
+- Si l'usuari t'envia una imatge i et demana que la incloguis com a imatge d'un ítem, pots fer-ho passant la URL de la imatge al camp image_url.
+- Si l'usuari et dona un PDF o document amb informació d'una UE o objecte, has d'extreure'n les dades, mostrar un resum i demanar confirmació abans de crear-lo.
+- Si l'usuari demana generar dades aleatòries però plausibles, genera-les, mostra-les i demana confirmació.
 
 ${dataContext}`;
 
@@ -99,7 +98,7 @@ ${dataContext}`;
         type: "function",
         function: {
           name: "create_jaciment",
-          description: "Crea un nou jaciment a la base de dades",
+          description: "Crea un nou jaciment a la base de dades. IMPORTANT: Demana confirmació a l'usuari ABANS de cridar aquesta funció.",
           parameters: {
             type: "object",
             properties: {
@@ -108,6 +107,7 @@ ${dataContext}`;
               description: { type: "string", description: "Descripció del jaciment" },
               latitude: { type: "number", description: "Latitud" },
               longitude: { type: "number", description: "Longitud" },
+              image_url: { type: "string", description: "URL de la imatge del jaciment" },
             },
             required: ["name"],
           },
@@ -117,16 +117,20 @@ ${dataContext}`;
         type: "function",
         function: {
           name: "create_ue",
-          description: "Crea una nova Unitat Estratigràfica (UE)",
+          description: "Crea una nova Unitat Estratigràfica (UE). IMPORTANT: Demana confirmació a l'usuari ABANS de cridar aquesta funció.",
           parameters: {
             type: "object",
             properties: {
-              jaciment_id: { type: "string", description: "ID del jaciment" },
+              jaciment_id: { type: "string", description: "UUID del jaciment (ha de ser un UUID vàlid de la llista de jaciments)" },
               codi_ue: { type: "string", description: "Codi de la UE (ex: UE-001)" },
               descripcio: { type: "string", description: "Descripció" },
               cronologia: { type: "string", description: "Cronologia" },
               cota_superior: { type: "number", description: "Cota superior" },
               cota_inferior: { type: "number", description: "Cota inferior" },
+              color: { type: "string", description: "Color del sediment" },
+              sediment: { type: "string", description: "Tipus de sediment" },
+              interpretacio: { type: "string", description: "Interpretació" },
+              image_url: { type: "string", description: "URL de la imatge" },
             },
             required: ["jaciment_id"],
           },
@@ -136,15 +140,16 @@ ${dataContext}`;
         type: "function",
         function: {
           name: "create_objecte",
-          description: "Crea un nou objecte arqueològic",
+          description: "Crea un nou objecte arqueològic. IMPORTANT: Demana confirmació a l'usuari ABANS de cridar aquesta funció.",
           parameters: {
             type: "object",
             properties: {
-              jaciment_id: { type: "string", description: "ID del jaciment" },
+              jaciment_id: { type: "string", description: "UUID del jaciment" },
               name: { type: "string", description: "Nom de l'objecte" },
-              object_id: { type: "string", description: "Identificador de l'objecte (ex: OBJ-001)" },
+              object_id: { type: "string", description: "Identificador de l'objecte (ex: MMP00001)" },
               tipus: { type: "string", description: "Tipus d'objecte" },
-              ue_id: { type: "string", description: "ID de la UE associada" },
+              ue_id: { type: "string", description: "UUID de la UE associada" },
+              image_url: { type: "string", description: "URL de la imatge de l'objecte" },
             },
             required: ["jaciment_id", "name", "object_id"],
           },
@@ -200,17 +205,15 @@ ${dataContext}`;
       });
     }
 
-    // We need to handle tool calls - read full response to check for them
-    // For streaming, we'll collect and check for tool_calls
+    // Read full stream to detect tool calls
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     let toolCalls: any[] = [];
     let fullContent = "";
     let hasToolCalls = false;
-
-    // Collect stream to detect tool calls
     const chunks: string[] = [];
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -266,7 +269,6 @@ ${dataContext}`;
         }
       }
 
-      // Send tool results back to get final response
       const finalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -295,7 +297,7 @@ ${dataContext}`;
       });
     }
 
-    // No tool calls - reconstruct stream from collected chunks
+    // No tool calls - return collected stream
     const fullStream = chunks.join("");
     return new Response(fullStream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
@@ -318,20 +320,26 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
         description: args.description || null,
         latitude: args.latitude || null,
         longitude: args.longitude || null,
+        image_url: args.image_url || null,
       }).select().single();
       if (error) throw new Error(error.message);
       return { success: true, jaciment: data, message: `Jaciment "${data.name}" creat amb èxit. Enllaç: /jaciment/${data.id}` };
     }
     case "create_ue": {
-      const { data, error } = await supabase.from("ues").insert({
+      const insertData: any = {
         created_by: userId,
         jaciment_id: args.jaciment_id,
         codi_ue: args.codi_ue || null,
         descripcio: args.descripcio || null,
         cronologia: args.cronologia || null,
-        cota_superior: args.cota_superior || null,
-        cota_inferior: args.cota_inferior || null,
-      }).select().single();
+        cota_superior: args.cota_superior ?? null,
+        cota_inferior: args.cota_inferior ?? null,
+        color: args.color || null,
+        sediment: args.sediment || null,
+        interpretacio: args.interpretacio || null,
+        image_url: args.image_url || null,
+      };
+      const { data, error } = await supabase.from("ues").insert(insertData).select().single();
       if (error) throw new Error(error.message);
       return { success: true, ue: data, message: `UE "${data.codi_ue || data.id}" creada amb èxit. Enllaç: /ue/${data.id}` };
     }
@@ -343,24 +351,12 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
         object_id: args.object_id,
         tipus: args.tipus || null,
         ue_id: args.ue_id || null,
+        image_url: args.image_url || null,
       }).select().single();
       if (error) throw new Error(error.message);
       return { success: true, objecte: data, message: `Objecte "${data.name}" creat amb èxit. Enllaç: /objecte/${data.id}` };
     }
     default:
       throw new Error(`Funció desconeguda: ${name}`);
-  }
-}
-
-async function handleAction(supabase: any, userId: string, action: any, corsHeaders: any) {
-  try {
-    const result = await executeToolCall(supabase, userId, action.type, action.params);
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   }
 }
