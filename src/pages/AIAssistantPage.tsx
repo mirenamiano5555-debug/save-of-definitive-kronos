@@ -5,17 +5,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Send, Bot, User, Loader2, Plus, Trash2, Image, X, Menu } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, Plus, Trash2, Image, X, Menu, Paperclip, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { toast } from "@/hooks/use-toast";
 
-type Msg = { role: "user" | "assistant"; content: string; image_urls?: string[] };
+type Attachment = { url: string; type: "image" | "file"; name?: string };
+type Msg = { role: "user" | "assistant"; content: string; image_urls?: string[]; attachments?: Attachment[] };
 type Conversation = { id: string; title: string; updated_at: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 const WELCOME_MSG: Msg = {
   role: "assistant",
-  content: "Hola! Sóc l'assistent IA de Kronos. Puc ajudar-te amb:\n\n- **Consultar dades** de jaciments, UEs i objectes\n- **Crear registres** automàticament (jaciments, UEs, objectes)\n- **Analitzar imatges** que m'adjuntis\n- **Respondre preguntes** sobre arqueologia\n\nQuè necessites?"
+  content: "Hola! Sóc l'assistent IA de Kronos. Puc ajudar-te amb:\n\n- **Consultar dades** de jaciments, UEs i objectes\n- **Crear registres** automàticament (jaciments, UEs, objectes)\n- **Analitzar imatges** que m'adjuntis\n- **Processar PDFs** i documents per extreure dades\n- **Generar dades plausibles** si ho necessites\n- **Respondre preguntes** sobre arqueologia\n\n📎 Pots adjuntar imatges i documents usant el botó de clip.\n\nQuè necessites?"
 };
 
 export default function AIAssistantPage() {
@@ -27,12 +27,11 @@ export default function AIAssistantPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load conversations list
   const loadConversations = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
@@ -45,7 +44,6 @@ export default function AIAssistantPage() {
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
-  // Load messages for active conversation
   const loadMessages = useCallback(async (convId: string) => {
     const { data } = await supabase
       .from("ai_messages")
@@ -72,7 +70,7 @@ export default function AIAssistantPage() {
   const newConversation = () => {
     setActiveConvId(null);
     setMessages([WELCOME_MSG]);
-    setPendingImages([]);
+    setPendingAttachments([]);
     setSidebarOpen(false);
   };
 
@@ -86,31 +84,36 @@ export default function AIAssistantPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // Image upload
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !user) return;
     setUploading(true);
-    const urls: string[] = [];
+    const newAttachments: Attachment[] = [];
+
     for (const file of Array.from(files)) {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
+      const isImage = file.type.startsWith("image/");
       const path = `${user.id}/ai-chat/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
       const { error } = await supabase.storage.from("images").upload(path, file);
       if (!error) {
         const { data } = supabase.storage.from("images").getPublicUrl(path);
-        urls.push(data.publicUrl);
+        newAttachments.push({
+          url: data.publicUrl,
+          type: isImage ? "image" : "file",
+          name: file.name,
+        });
       }
     }
-    setPendingImages(prev => [...prev, ...urls]);
+
+    setPendingAttachments(prev => [...prev, ...newAttachments]);
     setUploading(false);
     if (e.target) e.target.value = "";
   };
 
-  const removePendingImage = (idx: number) => {
-    setPendingImages(prev => prev.filter((_, i) => i !== idx));
+  const removeAttachment = (idx: number) => {
+    setPendingAttachments(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // Save message to DB
   const saveMessage = async (convId: string, msg: Msg) => {
     await supabase.from("ai_messages").insert({
       conversation_id: convId,
@@ -122,24 +125,36 @@ export default function AIAssistantPage() {
 
   const send = async () => {
     const text = input.trim();
-    if ((!text && pendingImages.length === 0) || loading || !session) return;
+    if ((!text && pendingAttachments.length === 0) || loading || !session) return;
+
+    const imageUrls = pendingAttachments.filter(a => a.type === "image").map(a => a.url);
+    const fileUrls = pendingAttachments.filter(a => a.type === "file");
+
+    // Build content with file references
+    let fullContent = text;
+    if (fileUrls.length > 0) {
+      const fileRefs = fileUrls.map(f => `[Document adjunt: ${f.name || "fitxer"} - ${f.url}]`).join("\n");
+      fullContent = fullContent ? `${fullContent}\n\n${fileRefs}` : fileRefs;
+    }
+
+    const allImageUrls = [...imageUrls, ...fileUrls.filter(f => f.url.match(/\.(pdf)$/i)).map(f => f.url)];
 
     const userMsg: Msg = {
       role: "user",
-      content: text,
-      image_urls: pendingImages.length > 0 ? [...pendingImages] : undefined,
+      content: fullContent,
+      image_urls: allImageUrls.length > 0 ? allImageUrls : undefined,
+      attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
     };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
-    setPendingImages([]);
+    setPendingAttachments([]);
     setLoading(true);
 
     let convId = activeConvId;
 
     try {
-      // Create conversation if new
       if (!convId) {
-        const title = text.slice(0, 60) || "Imatge";
+        const title = text.slice(0, 60) || "Imatge/Document";
         const { data: conv, error } = await supabase
           .from("ai_conversations")
           .insert({ user_id: user!.id, title })
@@ -148,17 +163,13 @@ export default function AIAssistantPage() {
         if (error || !conv) throw new Error("No s'ha pogut crear la conversa");
         convId = conv.id;
         setActiveConvId(convId);
-        // Save welcome message
         await saveMessage(convId, WELCOME_MSG);
       } else {
-        // Update conversation timestamp
         await supabase.from("ai_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
       }
 
-      // Save user message
       await saveMessage(convId, userMsg);
 
-      // Build message history for AI (exclude welcome)
       const historyForAI = [...messages.filter((_, i) => i > 0), userMsg];
 
       const resp = await fetch(CHAT_URL, {
@@ -225,7 +236,6 @@ export default function AIAssistantPage() {
         }
       }
 
-      // Save assistant response
       if (assistantSoFar && convId) {
         await saveMessage(convId, { role: "assistant", content: assistantSoFar });
       }
@@ -274,7 +284,6 @@ export default function AIAssistantPage() {
         </ScrollArea>
       </div>
 
-      {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-20 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -303,13 +312,21 @@ export default function AIAssistantPage() {
               <div className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
                 msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
               }`}>
+                {/* Show images */}
                 {msg.image_urls && msg.image_urls.length > 0 && (
                   <div className="flex gap-2 mb-2 flex-wrap">
-                    {msg.image_urls.map((url, idx) => (
+                    {msg.image_urls.filter(url => !url.endsWith(".pdf")).map((url, idx) => (
                       <img key={idx} src={url} alt="Adjunt" className="h-32 rounded object-cover" />
                     ))}
                   </div>
                 )}
+                {/* Show file attachments */}
+                {msg.attachments?.filter(a => a.type === "file").map((a, idx) => (
+                  <div key={idx} className="flex items-center gap-2 mb-2 p-2 rounded bg-background/50 text-foreground">
+                    <FileText className="h-4 w-4 shrink-0" />
+                    <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-xs underline truncate">{a.name || "Document"}</a>
+                  </div>
+                ))}
                 {msg.role === "assistant" ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -335,14 +352,21 @@ export default function AIAssistantPage() {
           )}
         </div>
 
-        {/* Pending images preview */}
-        {pendingImages.length > 0 && (
+        {/* Pending attachments preview */}
+        {pendingAttachments.length > 0 && (
           <div className="px-4 pb-2 flex gap-2 flex-wrap">
-            {pendingImages.map((url, idx) => (
+            {pendingAttachments.map((att, idx) => (
               <div key={idx} className="relative">
-                <img src={url} alt="Preview" className="h-16 rounded object-cover border border-border" />
+                {att.type === "image" ? (
+                  <img src={att.url} alt="Preview" className="h-16 rounded object-cover border border-border" />
+                ) : (
+                  <div className="h-16 w-20 rounded border border-border bg-muted flex flex-col items-center justify-center gap-1">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[4.5rem]">{att.name || "fitxer"}</span>
+                  </div>
+                )}
                 <button
-                  onClick={() => removePendingImage(idx)}
+                  onClick={() => removeAttachment(idx)}
                   className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full h-4 w-4 flex items-center justify-center text-xs"
                 >
                   <X className="h-3 w-3" />
@@ -361,8 +385,9 @@ export default function AIAssistantPage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="shrink-0"
+              title="Adjuntar imatges o documents"
             >
-              <Image className="h-5 w-5" />
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
             </Button>
             <Input
               value={input}
@@ -371,17 +396,17 @@ export default function AIAssistantPage() {
               disabled={loading}
               className="flex-1"
             />
-            <Button type="submit" size="icon" disabled={loading || (!input.trim() && pendingImages.length === 0)}>
+            <Button type="submit" size="icon" disabled={loading || (!input.trim() && pendingAttachments.length === 0)}>
               <Send className="h-4 w-4" />
             </Button>
           </form>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.pdf,.doc,.docx,.txt,.csv"
             multiple
             className="hidden"
-            onChange={handleImageUpload}
+            onChange={handleFileUpload}
           />
         </div>
       </div>
