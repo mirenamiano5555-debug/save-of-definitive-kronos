@@ -333,17 +333,9 @@ const es: Record<string, string> = {
   "Exportar": "Exportar",
   "fitxes (PDF)": "fichas (PDF)",
   "EXPORTACIÓ MASSIVA": "EXPORTACIÓN MASIVA",
-  "OBJECTES": "OBJETOS",
-  "UNITATS ESTRATIGRÀFIQUES": "UNIDADES ESTRATIGRÁFICAS",
-  "JACIMENTS": "YACIMIENTOS",
-  "registres": "registros",
-  "Sense nom": "Sin nombre",
-  "PDF exportat!": "¡PDF exportado!",
-  "Document exportat!": "¡Documento exportado!",
 
   // QR Editor
-  "Afegir QR": "Añadir QR",
-  "Selecciona un objecte": "Selecciona un objeto",
+  "Exportar imatge": "Exportar imagen",
   "Exportar imatge": "Exportar imagen",
   "Desar disposició": "Guardar disposición",
   "Desant...": "Guardando...",
