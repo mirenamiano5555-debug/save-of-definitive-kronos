@@ -623,7 +623,6 @@ const en: Record<string, string> = {
   "Missatges": "Messages",
   "Cercar contacte...": "Search contact...",
   "No s'han trobat contactes": "No contacts found",
-  "Sense nom": "No name",
   "Encara no hi ha missatges. Escriu el primer!": "No messages yet. Write the first one!",
   "Escriu un missatge...": "Write a message...",
   "Error enviant el missatge": "Error sending message",
