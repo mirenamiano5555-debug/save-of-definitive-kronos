@@ -696,20 +696,7 @@ const en: Record<string, string> = {
   "Usuari": "User",
   "Creat": "Created",
 
-  // Mass Export
-  "fitxes exportades!": "records exported!",
-  "fitxes (PDF)": "records (PDF)",
-  "EXPORTACIÓ MASSIVA": "MASS EXPORT",
-  "OBJECTES": "OBJECTS",
-  "UNITATS ESTRATIGRÀFIQUES": "STRATIGRAPHIC UNITS",
-  "JACIMENTS": "SITES",
-  "registres": "records",
-  "PDF exportat!": "PDF exported!",
-  "Document exportat!": "Document exported!",
-
   // QR Editor
-  "Afegir QR": "Add QR",
-  "Selecciona un objecte": "Select an object",
   "Exportar imatge": "Export image",
   "Desar disposició": "Save layout",
   "Desant...": "Saving...",
