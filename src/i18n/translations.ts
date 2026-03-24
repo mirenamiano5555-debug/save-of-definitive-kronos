@@ -167,7 +167,6 @@ const es: Record<string, string> = {
   "Observacions": "Observaciones",
   "Imatges (opcional)": "Imágenes (opcional)",
   "Cotes": "Cotas",
-  "Cotes": "Cotas",
   "Cota superior (m)": "Cota superior (m)",
   "Cota inferior (m)": "Cota inferior (m)",
 
@@ -330,12 +329,10 @@ const es: Record<string, string> = {
 
   // Mass Export
   "fitxes exportades!": "¡fichas exportadas!",
-  "Exportar": "Exportar",
   "fitxes (PDF)": "fichas (PDF)",
   "EXPORTACIÓ MASSIVA": "EXPORTACIÓN MASIVA",
 
   // QR Editor
-  "Exportar imatge": "Exportar imagen",
   "Exportar imatge": "Exportar imagen",
   "Desar disposició": "Guardar disposición",
   "Desant...": "Guardando...",
