@@ -167,7 +167,6 @@ const es: Record<string, string> = {
   "Observacions": "Observaciones",
   "Imatges (opcional)": "Imágenes (opcional)",
   "Cotes": "Cotas",
-  "Cotes": "Cotas",
   "Cota superior (m)": "Cota superior (m)",
   "Cota inferior (m)": "Cota inferior (m)",
 
