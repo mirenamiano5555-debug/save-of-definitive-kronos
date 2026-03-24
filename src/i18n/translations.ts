@@ -335,7 +335,6 @@ const es: Record<string, string> = {
 
   // QR Editor
   "Exportar imatge": "Exportar imagen",
-  "Exportar imatge": "Exportar imagen",
   "Desar disposició": "Guardar disposición",
   "Desant...": "Guardando...",
   "Disposició dels QRs desada!": "¡Disposición de los QRs guardada!",
