@@ -329,7 +329,6 @@ const es: Record<string, string> = {
 
   // Mass Export
   "fitxes exportades!": "¡fichas exportadas!",
-  "Exportar": "Exportar",
   "fitxes (PDF)": "fichas (PDF)",
   "EXPORTACIÓ MASSIVA": "EXPORTACIÓN MASIVA",
 
