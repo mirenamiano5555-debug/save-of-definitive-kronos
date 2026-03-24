@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -28,6 +29,7 @@ interface Jaciment {
 
 export default function MapPage() {
   const navigate = useNavigate();
+  const { t } = useT();
   const [jaciments, setJaciments] = useState<Jaciment[]>([]);
 
   useEffect(() => {
@@ -52,11 +54,11 @@ export default function MapPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-serif font-bold">Mapa de jaciments</h1>
+        <h1 className="text-xl font-serif font-bold">{t("Mapa de jaciments")}</h1>
       </header>
 
       <div className="h-[calc(100vh-57px)]" style={{ zIndex: 0 }}>
-        <MapContainer center={center} zoom={7} className="h-full w-full">
+        <MapContainer center={center} zoom={7} className="h-full w-full" style={{ zIndex: 0 }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -66,13 +68,13 @@ export default function MapPage() {
               <Popup>
                 <div className="space-y-1">
                   <p className="font-bold">{j.name}</p>
-                  {j.period && <p className="text-xs">Període: {j.period}</p>}
-                  {j.entity && <p className="text-xs">Entitat: {j.entity}</p>}
+                  {j.period && <p className="text-xs">{t("Període")}: {j.period}</p>}
+                  {j.entity && <p className="text-xs">{t("Entitat")}: {j.entity}</p>}
                   <button
                     className="text-xs text-blue-600 underline"
                     onClick={() => navigate(`/jaciment/${j.id}`)}
                   >
-                    Veure fitxa →
+                    {t("Veure fitxa →")}
                   </button>
                 </div>
               </Popup>
