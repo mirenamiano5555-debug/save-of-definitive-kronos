@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +12,7 @@ import MassExport from "@/components/MassExport";
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const { t } = useT();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("objectes");
   const [results, setResults] = useState<any[]>([]);
@@ -83,8 +85,8 @@ export default function SearchPage() {
   };
 
   const getName = (item: any) => {
-    if (tab === "objectes") return item.name || "Objecte";
-    if (tab === "jaciments") return item.name || "Jaciment";
+    if (tab === "objectes") return item.name || t("Objecte");
+    if (tab === "jaciments") return item.name || t("Jaciment");
     return item.codi_ue || `UE ${item.id.slice(0, 8)}`;
   };
 
@@ -96,20 +98,20 @@ export default function SearchPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-serif font-bold">Buscar</h1>
+        <h1 className="text-xl font-serif font-bold">{t("Buscar")}</h1>
       </header>
 
       <div className="p-4 space-y-4 animate-fade-in">
         <div className="relative">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Cerca per nom, ID, lloc..." className="pl-10" />
+          <Input value={query} onChange={e => setQuery(e.target.value)} placeholder={t("Cerca per nom, ID, lloc...")} className="pl-10" />
         </div>
 
         <Tabs value={tab} onValueChange={v => { setTab(v); setResults([]); setSelected(new Set()); }}>
           <TabsList className="w-full">
-            <TabsTrigger value="objectes" className="flex-1 gap-1"><Box className="h-3 w-3" /> Objectes</TabsTrigger>
-            <TabsTrigger value="jaciments" className="flex-1 gap-1"><Mountain className="h-3 w-3" /> Jaciments</TabsTrigger>
-            <TabsTrigger value="ues" className="flex-1 gap-1"><Layers className="h-3 w-3" /> UEs</TabsTrigger>
+            <TabsTrigger value="objectes" className="flex-1 gap-1"><Box className="h-3 w-3" /> {t("Objectes")}</TabsTrigger>
+            <TabsTrigger value="jaciments" className="flex-1 gap-1"><Mountain className="h-3 w-3" /> {t("Jaciments")}</TabsTrigger>
+            <TabsTrigger value="ues" className="flex-1 gap-1"><Layers className="h-3 w-3" /> {t("UEs")}</TabsTrigger>
           </TabsList>
 
           <div className="mt-3">
@@ -119,15 +121,15 @@ export default function SearchPage() {
           {results.length > 0 && (
             <div className="flex items-center justify-between mt-3">
               <Button variant="ghost" size="sm" onClick={selectAll} className="h-7 text-xs">
-                {selected.size === results.length ? "Deseleccionar tot" : "Seleccionar tot"}
+                {selected.size === results.length ? t("Deseleccionar tot") : t("Seleccionar tot")}
               </Button>
               {selected.size > 0 && <MassExport items={selectedItems} type={tab as any} />}
             </div>
           )}
 
           <TabsContent value={tab} className="space-y-3 mt-2">
-            {loading && <p className="text-center text-muted-foreground">Cercant...</p>}
-            {!loading && results.length === 0 && query && <p className="text-center text-muted-foreground">Cap resultat trobat</p>}
+            {loading && <p className="text-center text-muted-foreground">{t("Cercant...")}</p>}
+            {!loading && results.length === 0 && query && <p className="text-center text-muted-foreground">{t("Cap resultat trobat")}</p>}
 
             {results.map(item => (
               <div key={item.id} className="flex items-center gap-2">

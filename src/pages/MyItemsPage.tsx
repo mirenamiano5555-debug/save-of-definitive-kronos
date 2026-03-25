@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +13,7 @@ import MassExport from "@/components/MassExport";
 export default function MyItemsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useT();
   const [tab, setTab] = useState("objectes");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,29 +61,29 @@ export default function MyItemsPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-serif font-bold">Els meus ítems</h1>
+        <h1 className="text-xl font-serif font-bold">{t("Els meus ítems")}</h1>
       </header>
 
       <div className="p-4 animate-fade-in">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="w-full">
-            <TabsTrigger value="objectes" className="flex-1 gap-1"><Box className="h-3 w-3" /> Objectes</TabsTrigger>
-            <TabsTrigger value="ues" className="flex-1 gap-1"><Layers className="h-3 w-3" /> UEs</TabsTrigger>
-            <TabsTrigger value="jaciments" className="flex-1 gap-1"><Mountain className="h-3 w-3" /> Jaciments</TabsTrigger>
+            <TabsTrigger value="objectes" className="flex-1 gap-1"><Box className="h-3 w-3" /> {t("Objectes")}</TabsTrigger>
+            <TabsTrigger value="ues" className="flex-1 gap-1"><Layers className="h-3 w-3" /> {t("UEs")}</TabsTrigger>
+            <TabsTrigger value="jaciments" className="flex-1 gap-1"><Mountain className="h-3 w-3" /> {t("Jaciments")}</TabsTrigger>
           </TabsList>
 
           {items.length > 0 && (
             <div className="flex items-center justify-between mt-3">
               <Button variant="ghost" size="sm" onClick={selectAll} className="h-7 text-xs">
-                {selected.size === items.length ? "Deseleccionar" : "Seleccionar tot"}
+                {selected.size === items.length ? t("Deseleccionar") : t("Seleccionar tot")}
               </Button>
               {selected.size > 0 && <MassExport items={selectedItems} type={tab as any} />}
             </div>
           )}
 
           <TabsContent value={tab} className="space-y-3 mt-2">
-            {loading && <p className="text-center text-muted-foreground">Carregant...</p>}
-            {!loading && items.length === 0 && <p className="text-center text-muted-foreground">Encara no tens {tab}</p>}
+            {loading && <p className="text-center text-muted-foreground">{t("Carregant...")}</p>}
+            {!loading && items.length === 0 && <p className="text-center text-muted-foreground">{t("Encara no tens")} {t(tab === "objectes" ? "Objectes" : tab === "ues" ? "UEs" : "Jaciments").toLowerCase()}</p>}
             {items.map(item => (
               <div key={item.id} className="flex items-center gap-2">
                 <Checkbox checked={selected.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
