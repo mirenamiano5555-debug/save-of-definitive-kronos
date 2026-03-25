@@ -546,6 +546,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_director_same_entity: {
+        Args: { _creator_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "tecnic" | "director"
