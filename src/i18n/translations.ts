@@ -753,14 +753,7 @@ const en: Record<string, string> = {
   "Dades Identificactives": "Identification Data",
   "Datació": "Dating",
   "Documentació i Mostres": "Documentation and Samples",
-  "Selecciona un jaciment": "Select a site",
-  "Sens nom": "No name",
-  "Ubicació": "Location",
   "Creant...": "Creating...",
-  "Data descobriment": "Discovery date",
-  "Data d'origen": "Date of origin",
-  "Altres números": "Other numbers",
-  "Sense nom": "No name",
 };
 
 export const translations: Record<Lang, Record<string, string>> = {
