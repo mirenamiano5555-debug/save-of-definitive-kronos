@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,17 +14,29 @@ type Msg = { role: "user" | "assistant"; content: string; image_urls?: string[];
 type Conversation = { id: string; title: string; updated_at: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
-const WELCOME_MSG: Msg = {
-  role: "assistant",
-  content: "Hola! Sóc l'assistent IA de Kronos. Puc ajudar-te amb:\n\n- **Consultar dades** de jaciments, UEs i objectes\n- **Crear registres** automàticament (jaciments, UEs, objectes)\n- **Analitzar imatges** que m'adjuntis\n- **Processar PDFs** i documents per extreure dades\n- **Generar dades plausibles** si ho necessites\n- **Respondre preguntes** sobre arqueologia\n\n📎 Pots adjuntar imatges i documents usant el botó de clip.\n\nQuè necessites?"
-};
+
+function getWelcomeMsg(lang: string): Msg {
+  if (lang === "es") return {
+    role: "assistant",
+    content: "¡Hola! Soy el asistente IA de Kronos. Puedo ayudarte con:\n\n- **Consultar datos** de yacimientos, UEs y objetos\n- **Crear registros** automáticamente\n- **Analizar imágenes** que me adjuntes\n- **Procesar PDFs** y documentos\n- **Generar datos plausibles** si lo necesitas\n- **Responder preguntas** sobre arqueología\n\n📎 Puedes adjuntar imágenes y documentos con el botón de clip.\n\n¿Qué necesitas?"
+  };
+  if (lang === "en") return {
+    role: "assistant",
+    content: "Hello! I'm Kronos' AI assistant. I can help you with:\n\n- **Query data** from sites, SUs and objects\n- **Create records** automatically\n- **Analyze images** you attach\n- **Process PDFs** and documents\n- **Generate plausible data** if needed\n- **Answer questions** about archaeology\n\n📎 You can attach images and documents with the clip button.\n\nWhat do you need?"
+  };
+  return {
+    role: "assistant",
+    content: "Hola! Sóc l'assistent IA de Kronos. Puc ajudar-te amb:\n\n- **Consultar dades** de jaciments, UEs i objectes\n- **Crear registres** automàticament\n- **Analitzar imatges** que m'adjuntis\n- **Processar PDFs** i documents\n- **Generar dades plausibles** si ho necessites\n- **Respondre preguntes** sobre arqueologia\n\n📎 Pots adjuntar imatges i documents usant el botó de clip.\n\nQuè necessites?"
+  };
+}
 
 export default function AIAssistantPage() {
   const navigate = useNavigate();
   const { user, session } = useAuth();
+  const { t, lang } = useT();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Msg[]>([WELCOME_MSG]);
+  const [messages, setMessages] = useState<Msg[]>([getWelcomeMsg(lang)]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,9 +70,9 @@ export default function AIAssistantPage() {
         image_urls: m.image_urls || undefined,
       })));
     } else {
-      setMessages([WELCOME_MSG]);
+      setMessages([getWelcomeMsg(lang)]);
     }
-  }, []);
+  }, [lang]);
 
   const selectConversation = async (convId: string) => {
     setActiveConvId(convId);
@@ -69,7 +82,7 @@ export default function AIAssistantPage() {
 
   const newConversation = () => {
     setActiveConvId(null);
-    setMessages([WELCOME_MSG]);
+    setMessages([getWelcomeMsg(lang)]);
     setPendingAttachments([]);
     setSidebarOpen(false);
   };
@@ -130,12 +143,15 @@ export default function AIAssistantPage() {
     const imageUrls = pendingAttachments.filter(a => a.type === "image").map(a => a.url);
     const fileUrls = pendingAttachments.filter(a => a.type === "file");
 
-    // Build content with file references
     let fullContent = text;
     if (fileUrls.length > 0) {
       const fileRefs = fileUrls.map(f => `[Document adjunt: ${f.name || "fitxer"} - ${f.url}]`).join("\n");
       fullContent = fullContent ? `${fullContent}\n\n${fileRefs}` : fileRefs;
     }
+
+    // Add language hint for the AI
+    const langHint = lang === "es" ? "\n[Responde en castellano]" : lang === "en" ? "\n[Reply in English]" : "";
+    const contentForAI = fullContent + langHint;
 
     const allImageUrls = [...imageUrls, ...fileUrls.filter(f => f.url.match(/\.(pdf)$/i)).map(f => f.url)];
 
@@ -144,6 +160,10 @@ export default function AIAssistantPage() {
       content: fullContent,
       image_urls: allImageUrls.length > 0 ? allImageUrls : undefined,
       attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
+    };
+    const userMsgForAI: Msg = {
+      ...userMsg,
+      content: contentForAI,
     };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
@@ -163,14 +183,14 @@ export default function AIAssistantPage() {
         if (error || !conv) throw new Error("No s'ha pogut crear la conversa");
         convId = conv.id;
         setActiveConvId(convId);
-        await saveMessage(convId, WELCOME_MSG);
+        await saveMessage(convId, getWelcomeMsg(lang));
       } else {
         await supabase.from("ai_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
       }
 
       await saveMessage(convId, userMsg);
 
-      const historyForAI = [...messages.filter((_, i) => i > 0), userMsg];
+      const historyForAI = [...messages.filter((_, i) => i > 0), userMsgForAI];
 
       const resp = await fetch(CHAT_URL, {
         method: "POST",
@@ -186,13 +206,11 @@ export default function AIAssistantPage() {
 
       if (!resp.ok || !resp.body) {
         if (resp.status === 429) {
-          setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Massa peticions. Espera uns segons i torna a provar." }]);
+          setMessages(prev => [...prev, { role: "assistant", content: "⚠️ " + t("Massa peticions. Espera uns segons i torna a provar.") }]);
         } else if (resp.status === 402) {
-          setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Crèdits esgotats. Contacta l'administrador." }]);
+          setMessages(prev => [...prev, { role: "assistant", content: "⚠️ " + t("Crèdits esgotats. Contacta l'administrador.") }]);
         } else {
-          const errorText = await resp.text().catch(() => "");
-          console.error("AI error:", resp.status, errorText);
-          setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Error de connexió. Torna a provar." }]);
+          setMessages(prev => [...prev, { role: "assistant", content: "⚠️ " + t("Error de connexió. Torna a provar.") }]);
         }
         setLoading(false);
         loadConversations();
@@ -243,7 +261,7 @@ export default function AIAssistantPage() {
       loadConversations();
     } catch (e) {
       console.error("Chat error:", e);
-      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Error de connexió. Torna a provar." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ " + t("Error de connexió. Torna a provar.") }]);
     }
     setLoading(false);
   };
@@ -253,8 +271,8 @@ export default function AIAssistantPage() {
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-30 w-72 bg-card border-r border-border transform transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0 md:flex md:flex-col`}>
         <div className="p-3 border-b border-border flex items-center justify-between">
-          <h2 className="font-semibold text-sm">Converses</h2>
-          <Button variant="ghost" size="icon" onClick={newConversation} title="Nova conversa">
+          <h2 className="font-semibold text-sm">{t("Converses")}</h2>
+          <Button variant="ghost" size="icon" onClick={newConversation} title={t("Nova conversa")}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -278,7 +296,7 @@ export default function AIAssistantPage() {
               </div>
             ))}
             {conversations.length === 0 && (
-              <p className="text-xs text-muted-foreground p-3">Cap conversa encara</p>
+              <p className="text-xs text-muted-foreground p-3">{t("Cap conversa encara")}</p>
             )}
           </div>
         </ScrollArea>
@@ -298,7 +316,7 @@ export default function AIAssistantPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Bot className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-serif font-bold">Assistent IA</h1>
+          <h1 className="text-xl font-serif font-bold">{t("Assistent IA")}</h1>
         </header>
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
@@ -312,7 +330,6 @@ export default function AIAssistantPage() {
               <div className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
                 msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
               }`}>
-                {/* Show images */}
                 {msg.image_urls && msg.image_urls.length > 0 && (
                   <div className="flex gap-2 mb-2 flex-wrap">
                     {msg.image_urls.filter(url => !url.endsWith(".pdf")).map((url, idx) => (
@@ -320,7 +337,6 @@ export default function AIAssistantPage() {
                     ))}
                   </div>
                 )}
-                {/* Show file attachments */}
                 {msg.attachments?.filter(a => a.type === "file").map((a, idx) => (
                   <div key={idx} className="flex items-center gap-2 mb-2 p-2 rounded bg-background/50 text-foreground">
                     <FileText className="h-4 w-4 shrink-0" />
@@ -352,7 +368,6 @@ export default function AIAssistantPage() {
           )}
         </div>
 
-        {/* Pending attachments preview */}
         {pendingAttachments.length > 0 && (
           <div className="px-4 pb-2 flex gap-2 flex-wrap">
             {pendingAttachments.map((att, idx) => (
@@ -385,14 +400,14 @@ export default function AIAssistantPage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="shrink-0"
-              title="Adjuntar imatges o documents"
+              title={t("Adjuntar imatges o documents")}
             >
               {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
             </Button>
             <Input
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Escriu la teva pregunta..."
+              placeholder={t("Escriu la teva pregunta...")}
               disabled={loading}
               className="flex-1"
             />

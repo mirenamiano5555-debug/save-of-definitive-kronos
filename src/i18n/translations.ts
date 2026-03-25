@@ -347,9 +347,13 @@ const es: Record<string, string> = {
 
   // AI
   "Converses": "Conversaciones",
+  "Nova conversa": "Nueva conversación",
   "Cap conversa encara": "Ninguna conversación aún",
   "Escriu la teva pregunta...": "Escribe tu pregunta...",
   "Adjuntar imatges o documents": "Adjuntar imágenes o documentos",
+  "Massa peticions. Espera uns segons i torna a provar.": "Demasiadas peticiones. Espera unos segundos y vuelve a intentarlo.",
+  "Crèdits esgotats. Contacta l'administrador.": "Créditos agotados. Contacta al administrador.",
+  "Error de connexió. Torna a provar.": "Error de conexión. Vuelve a intentarlo.",
 
   // Map picker
   "Mostrar mapa": "Mostrar mapa",
@@ -708,9 +712,13 @@ const en: Record<string, string> = {
 
   // AI
   "Converses": "Conversations",
+  "Nova conversa": "New conversation",
   "Cap conversa encara": "No conversations yet",
   "Escriu la teva pregunta...": "Write your question...",
   "Adjuntar imatges o documents": "Attach images or documents",
+  "Massa peticions. Espera uns segons i torna a provar.": "Too many requests. Wait a few seconds and try again.",
+  "Crèdits esgotats. Contacta l'administrador.": "Credits exhausted. Contact the administrator.",
+  "Error de connexió. Torna a provar.": "Connection error. Try again.",
 
   // Map picker
   "Mostrar mapa": "Show map",
