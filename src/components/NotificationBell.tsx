@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bell } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 interface Notification {
   id: string;
@@ -20,6 +20,7 @@ interface Notification {
 export default function NotificationBell() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t, lang } = useT();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -68,6 +69,8 @@ export default function NotificationBell() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
+  const dateLocale = lang === "en" ? "en" : lang === "es" ? "es" : "ca";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -82,16 +85,16 @@ export default function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="p-3 border-b border-border flex items-center justify-between">
-          <h3 className="font-serif font-semibold text-sm">Notificacions</h3>
+          <h3 className="font-serif font-semibold text-sm">{t("Notificacions")}</h3>
           {unreadCount > 0 && (
             <button onClick={markAllRead} className="text-xs text-primary hover:underline">
-              Marcar totes com llegides
+              {t("Marcar totes com llegides")}
             </button>
           )}
         </div>
         <div className="max-h-64 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Sense notificacions</p>
+            <p className="text-sm text-muted-foreground text-center py-6">{t("Sense notificacions")}</p>
           ) : (
             notifications.map(n => (
               <button
@@ -105,7 +108,7 @@ export default function NotificationBell() {
                 <p className="text-sm font-medium">{n.title}</p>
                 {n.body && <p className="text-xs text-muted-foreground">{n.body}</p>}
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  {new Date(n.created_at).toLocaleDateString("ca")}
+                  {new Date(n.created_at).toLocaleDateString(dateLocale)}
                 </p>
               </button>
             ))

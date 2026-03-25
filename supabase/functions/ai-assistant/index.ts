@@ -66,7 +66,7 @@ OBJECTES (${objectes.length}):
 ${objectes.slice(0, 50).map(o => `- ${o.name} (${o.object_id}, ID: ${o.id}, Tipus: ${o.tipus || "N/A"}, Jaciment: ${jaciments.find(j => j.id === o.jaciment_id)?.name || "?"})`).join("\n")}
 `;
 
-    const systemPrompt = `Ets l'assistent IA de Kronos, una aplicació de documentació arqueològica professional en català.
+    const systemPrompt = `Ets l'assistent IA de Kronos, una aplicació de documentació arqueològica professional.
 L'ID de l'usuari actual és: ${userId}
 
 CAPACITATS:
@@ -82,7 +82,7 @@ CAPACITATS:
 - Generar dades plausibles per a camps d'ítems si l'usuari ho demana
 
 REGLES IMPORTANTS:
-- Respon SEMPRE en català
+- IDIOMA: Respon SEMPRE en el mateix idioma en què l'usuari t'escriu. Si l'usuari parla en català, respon en català. Si parla en castellà, respon en castellà. Si parla en anglès, respon en anglès. Detecta l'idioma del primer missatge de l'usuari i mantén-lo durant tota la conversa, excepte si l'usuari canvia d'idioma.
 - Sigues concís però informatiu
 - Quan referencïis elements, proporciona l'enllaç directe
 - Utilitza format markdown per organitzar les respostes

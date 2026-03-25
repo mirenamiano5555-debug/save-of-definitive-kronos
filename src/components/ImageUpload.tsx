@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Camera, Image, X } from "lucide-react";
@@ -13,12 +14,14 @@ interface ImageUploadProps {
   multiple?: boolean;
 }
 
-export default function ImageUpload({ value, onChange, label = "Imatge", folder = "general", multiple = false }: ImageUploadProps) {
+export default function ImageUpload({ value, onChange, label, folder = "general", multiple = false }: ImageUploadProps) {
   const { user } = useAuth();
+  const { t } = useT();
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
+  const displayLabel = label || t("Imatge");
   const images = multiple && value ? value.split(",").map(s => s.trim()).filter(Boolean) : value ? [value] : [];
 
   const uploadFile = async (file: File) => {
@@ -63,7 +66,7 @@ export default function ImageUpload({ value, onChange, label = "Imatge", folder 
 
   return (
     <div>
-      <Label>{label}</Label>
+      <Label>{displayLabel}</Label>
       {images.length > 0 && (
         <div className={`mt-2 gap-2 ${multiple ? "grid grid-cols-2" : ""}`}>
           {images.map((img, idx) => (
@@ -93,7 +96,7 @@ export default function ImageUpload({ value, onChange, label = "Imatge", folder 
           >
             <Image className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground text-xs">
-              {uploading ? "Pujant..." : "Galeria"}
+              {uploading ? t("Pujant...") : t("Galeria")}
             </span>
           </Button>
           <Button
@@ -105,7 +108,7 @@ export default function ImageUpload({ value, onChange, label = "Imatge", folder 
           >
             <Camera className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground text-xs">
-              {uploading ? "Pujant..." : "Càmera"}
+              {uploading ? t("Pujant...") : t("Càmera")}
             </span>
           </Button>
         </div>
