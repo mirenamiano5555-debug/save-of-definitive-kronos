@@ -205,7 +205,7 @@ const es: Record<string, string> = {
 
   // Detail pages
   "Tancat": "Cerrado",
-  "Obert": "Obert",
+  "Obert": "Abierto",
   "Info": "Info",
   "Obj": "Obj",
   "Exportar": "Exportar",
