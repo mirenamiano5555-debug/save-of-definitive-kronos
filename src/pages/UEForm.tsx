@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +20,10 @@ interface Jaciment { id: string; name: string; }
 interface UEOption { id: string; codi_ue: string | null; }
 
 function Field({ label, value, onChange, textarea, type }: { label: string; value: string; onChange: (v: string) => void; textarea?: boolean; type?: string }) {
+  const { t } = useT();
   return (
     <div>
-      <Label>{label}</Label>
+      <Label>{t(label)}</Label>
       {textarea ? <Textarea value={value} onChange={e => onChange(e.target.value)} /> : <Input type={type || "text"} value={value} onChange={e => onChange(e.target.value)} />}
     </div>
   );
@@ -30,6 +32,7 @@ function Field({ label, value, onChange, textarea, type }: { label: string; valu
 export default function UEForm({ editId }: { editId?: string }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useT();
   const [loading, setLoading] = useState(false);
   const [jaciments, setJaciments] = useState<Jaciment[]>([]);
   const [ueOptions, setUeOptions] = useState<UEOption[]>([]);
@@ -126,7 +129,7 @@ export default function UEForm({ editId }: { editId?: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !jacimentId) { toast.error("Selecciona un jaciment"); return; }
+    if (!user || !jacimentId) { toast.error(t("Selecciona un jaciment")); return; }
     setLoading(true);
 
     const payload: any = {
@@ -141,11 +144,8 @@ export default function UEForm({ editId }: { editId?: string }) {
     };
 
     let error;
-    if (editId) {
-      ({ error } = await supabase.from("ues").update(payload).eq("id", editId));
-    } else {
-      ({ error } = await supabase.from("ues").insert(payload));
-    }
+    if (editId) { ({ error } = await supabase.from("ues").update(payload).eq("id", editId)); }
+    else { ({ error } = await supabase.from("ues").insert(payload)); }
 
     if (!error) {
       await supabase.from("change_logs").insert({
@@ -155,7 +155,7 @@ export default function UEForm({ editId }: { editId?: string }) {
     }
 
     if (error) toast.error(error.message);
-    else { toast.success(editId ? "UE actualitzada!" : "UE creada!"); navigate(-1); }
+    else { toast.success(editId ? t("UE actualitzada!") : t("UE creada!")); navigate(-1); }
     setLoading(false);
   };
 
@@ -165,7 +165,7 @@ export default function UEForm({ editId }: { editId?: string }) {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
-        <h1 className="text-xl font-serif font-bold">{editId ? "Editar" : "Nova"} Unitat Estratigràfica</h1>
+        <h1 className="text-xl font-serif font-bold">{editId ? t("Editar") : t("Nova")} {t("Unitat Estratigràfica")}</h1>
       </header>
 
       <form onSubmit={handleSubmit} className="p-4 space-y-6 pb-24 animate-fade-in">
@@ -185,12 +185,12 @@ export default function UEForm({ editId }: { editId?: string }) {
 
         <Accordion type="multiple" defaultValue={["identificacio", "descripcio", "relacions", "cotes", "interpretacio", "documentacio", "croquis", "mostres", "final"]} className="space-y-2">
           <AccordionItem value="identificacio">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Dades identificatives</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Dades identificatives")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <div>
-                <Label>Jaciment *</Label>
+                <Label>{t("Jaciment *")}</Label>
                 <Select value={jacimentId} onValueChange={setJacimentId}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona un jaciment" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("Selecciona un jaciment")} /></SelectTrigger>
                   <SelectContent>
                     {jaciments.map(j => <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>)}
                   </SelectContent>
@@ -207,7 +207,7 @@ export default function UEForm({ editId }: { editId?: string }) {
           </AccordionItem>
 
           <AccordionItem value="descripcio">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Descripció</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Descripció")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <Field label="FET" value={fet} onChange={setFet} />
               <Field label="Descripció" value={descripcio} onChange={setDescripcio} textarea />
@@ -217,7 +217,7 @@ export default function UEForm({ editId }: { editId?: string }) {
           </AccordionItem>
 
           <AccordionItem value="cotes">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Cotes</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Cotes")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <Field label="Cota superior (m)" value={cotaSuperior} onChange={setCotaSuperior} type="number" />
               <Field label="Cota inferior (m)" value={cotaInferior} onChange={setCotaInferior} type="number" />
@@ -225,7 +225,7 @@ export default function UEForm({ editId }: { editId?: string }) {
           </AccordionItem>
 
           <AccordionItem value="relacions">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Relacions estratigràfiques</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Relacions estratigràfiques")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <UERelationSelect label="Igual a" value={igualA} onChange={setIgualA} fieldName="igual_a" {...relationProps} />
               <UERelationSelect label="Tallat per" value={tallatPer} onChange={setTallatPer} fieldName="tallat_per" {...relationProps} />
@@ -240,7 +240,7 @@ export default function UEForm({ editId }: { editId?: string }) {
           </AccordionItem>
 
           <AccordionItem value="interpretacio">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Interpretació i datació</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Interpretació i datació")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <Field label="Interpretació" value={interpretacio} onChange={setInterpretacio} textarea />
               <Field label="Cronologia" value={cronologia} onChange={setCronologia} />
@@ -250,7 +250,7 @@ export default function UEForm({ editId }: { editId?: string }) {
           </AccordionItem>
 
           <AccordionItem value="documentacio">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Documentació</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Documentació")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <Field label="Planta" value={planta} onChange={setPlanta} />
               <Field label="Secció" value={seccio} onChange={setSeccio} />
@@ -259,14 +259,14 @@ export default function UEForm({ editId }: { editId?: string }) {
           </AccordionItem>
 
           <AccordionItem value="croquis">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Croquis</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Croquis")}</AccordionTrigger>
             <AccordionContent className="pt-2">
               <SketchPad value={croquisUrl} onChange={setCroquisUrl} folder="croquis" />
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="mostres">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Mostres</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Mostres")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <Field label="Sediment" value={sediment} onChange={setSediment} />
               <Field label="Carpologia" value={carpologia} onChange={setCarpologia} />
@@ -277,18 +277,18 @@ export default function UEForm({ editId }: { editId?: string }) {
           </AccordionItem>
 
           <AccordionItem value="final">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Final</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Final")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <Field label="Observacions" value={observacions} onChange={setObservacions} textarea />
-              <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatges (opcional)" folder="ues" multiple />
+              <ImageUpload value={imageUrl} onChange={setImageUrl} label={t("Imatges (opcional)")} folder="ues" multiple />
               <div>
-                <Label>Visibilitat</Label>
+                <Label>{t("Visibilitat")}</Label>
                 <Select value={visibility} onValueChange={setVisibility}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="public">Públic</SelectItem>
-                    <SelectItem value="entitat">Només entitat</SelectItem>
-                    <SelectItem value="esbos">Esbós</SelectItem>
+                    <SelectItem value="public">{t("Públic")}</SelectItem>
+                    <SelectItem value="entitat">{t("Només entitat")}</SelectItem>
+                    <SelectItem value="esbos">{t("Esbós")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -297,7 +297,7 @@ export default function UEForm({ editId }: { editId?: string }) {
         </Accordion>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Guardant..." : editId ? "Actualitzar" : "Crear UE"}
+          {loading ? t("Guardant...") : editId ? t("Actualitzar") : t("Crear UE")}
         </Button>
       </form>
     </div>
