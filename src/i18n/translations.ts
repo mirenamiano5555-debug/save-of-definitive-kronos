@@ -380,6 +380,14 @@ const es: Record<string, string> = {
   "Cota superior": "Cota superior",
   "Cota inferior": "Cota inferior",
   "usuari": "usuario",
+  "Selecciona un jaciment": "Selecciona un yacimiento",
+  "Sens nom": "Sin nombre",
+  "Ubicació": "Ubicación",
+  "Creant...": "Creando...",
+  "Data descobriment": "Fecha de descubrimiento",
+  "Data d'origen": "Fecha de origen",
+  "Altres números": "Otros números",
+  "Sense nom": "Sin nombre",
 };
 
 const en: Record<string, string> = {
