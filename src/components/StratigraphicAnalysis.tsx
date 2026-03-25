@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle, Search, Wand2 } from "lucide-react";
@@ -39,6 +40,7 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzed, setAnalyzed] = useState(false);
   const [fixing, setFixing] = useState(false);
+  const { t } = useT();
 
   const analyze = async () => {
     setAnalyzing(true);
@@ -58,10 +60,10 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
     for (const ue of ues) {
       const code = ue.codi_ue || ue.id.slice(0, 8);
       for (const rel of LATER_RELATIONS) {
-        for (const t of parseRelations((ue as any)[rel])) laterThan.get(code)?.add(t);
+        for (const tgt of parseRelations((ue as any)[rel])) laterThan.get(code)?.add(tgt);
       }
       for (const rel of EARLIER_RELATIONS) {
-        for (const t of parseRelations((ue as any)[rel])) laterThan.get(t)?.add(code);
+        for (const tgt of parseRelations((ue as any)[rel])) laterThan.get(tgt)?.add(code);
       }
     }
 
@@ -78,7 +80,7 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
     }
     for (const code of allCodes) if (!visited.has(code)) dfs(code, []);
     for (const cycle of cyclePaths) {
-      foundIssues.push({ type: "circular", message: `Bucle: ${cycle.join(" → ")} → ${cycle[0]}`, ues: cycle, suggestion: `Revisa les relacions per trencar el bucle.` });
+      foundIssues.push({ type: "circular", message: `Bucle: ${cycle.join(" → ")} → ${cycle[0]}`, ues: cycle, suggestion: t("Bucle circular") });
     }
 
     // Contradictions
@@ -87,16 +89,15 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
       for (const [laterRel, earlierRel] of INVERSE_PAIRS) {
         const laterTargets = parseRelations((ue as any)[laterRel]);
         const earlierTargets = parseRelations((ue as any)[earlierRel]);
-        for (const t of laterTargets) {
-          if (earlierTargets.includes(t)) {
+        for (const tgt of laterTargets) {
+          if (earlierTargets.includes(tgt)) {
             foundIssues.push({
               type: "contradiction",
-              message: `${code} ${RELATION_LABELS[laterRel]} ${t} però també ${RELATION_LABELS[earlierRel]} ${t}`,
-              ues: [code, t],
-              suggestion: `Elimina una de les dues relacions contradictòries.`,
+              message: `${code} ${RELATION_LABELS[laterRel]} ${tgt} → ${RELATION_LABELS[earlierRel]} ${tgt}`,
+              ues: [code, tgt],
+              suggestion: t("Contradicció"),
               fix: async () => {
-                // Remove the "earlier" relation to fix contradiction
-                const updated = earlierTargets.filter(x => x !== t).join(", ");
+                const updated = earlierTargets.filter(x => x !== tgt).join(", ");
                 await supabase.from("ues").update({ [earlierRel]: updated || null } as any).eq("id", ue.id);
               }
             });
@@ -110,16 +111,16 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
       const code = ue.codi_ue || ue.id.slice(0, 8);
       for (const [rel, inverseRel] of INVERSE_PAIRS) {
         const targets = parseRelations((ue as any)[rel]);
-        for (const t of targets) {
-          const targetUE = ueMap.get(t);
+        for (const tgt of targets) {
+          const targetUE = ueMap.get(tgt);
           if (targetUE) {
             const inverseTargets = parseRelations((targetUE as any)[inverseRel]);
             if (!inverseTargets.includes(code)) {
               foundIssues.push({
                 type: "duplicate",
-                message: `${code} ${RELATION_LABELS[rel]} ${t}, però ${t} no té ${code} com a "${RELATION_LABELS[inverseRel]}"`,
-                ues: [code, t],
-                suggestion: `Afegeix "${code}" al camp "${RELATION_LABELS[inverseRel]}" de ${t}.`,
+                message: `${code} ${RELATION_LABELS[rel]} ${tgt}, ${tgt} ≠ ${RELATION_LABELS[inverseRel]} ${code}`,
+                ues: [code, tgt],
+                suggestion: t("Inconsistència"),
                 fix: async () => {
                   const newVal = [...inverseTargets, code].join(", ");
                   await supabase.from("ues").update({ [inverseRel]: newVal } as any).eq("id", targetUE.id);
@@ -135,7 +136,7 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
     setIssues(unique);
     setAnalyzed(true);
     setAnalyzing(false);
-    if (unique.length === 0) toast.success("Cap incoherència detectada!");
+    if (unique.length === 0) toast.success(t("Cap incoherència detectada!"));
   };
 
   const autoCorrectAll = async () => {
@@ -144,23 +145,23 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
     for (const issue of fixable) {
       try { await issue.fix!(); } catch (e) { console.error(e); }
     }
-    toast.success(`${fixable.length} incoherències corregides!`);
+    toast.success(`${fixable.length} ${t("incoherències corregides!")}`);
     setFixing(false);
-    analyze(); // Re-analyze
+    analyze();
   };
 
   return (
     <div className="space-y-3">
       <Button onClick={analyze} disabled={analyzing} className="w-full">
         <Search className="h-4 w-4 mr-2" />
-        {analyzing ? "Analitzant..." : "Analitzar coherència estratigràfica"}
+        {analyzing ? t("Analitzant...") : t("Analitzar coherència estratigràfica")}
       </Button>
 
       {analyzed && issues.length === 0 && (
         <Card className="border-green-500/30 bg-green-500/5">
           <CardContent className="p-4 flex items-center gap-3">
             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-            <p className="text-sm">Totes les relacions estratigràfiques són coherents.</p>
+            <p className="text-sm">{t("Totes les relacions estratigràfiques són coherents.")}</p>
           </CardContent>
         </Card>
       )}
@@ -168,7 +169,7 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
       {issues.length > 0 && issues.some(i => i.fix) && (
         <Button onClick={autoCorrectAll} disabled={fixing} variant="outline" className="w-full gap-2">
           <Wand2 className="h-4 w-4" />
-          {fixing ? "Corregint..." : `Autocorregir ${issues.filter(i => i.fix).length} incoherències`}
+          {fixing ? t("Corregint...") : `${t("Autocorregir")} ${issues.filter(i => i.fix).length} ${t("incoherències")}`}
         </Button>
       )}
 
@@ -177,7 +178,7 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
           <CardHeader className="pb-2 pt-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
-              {issue.type === "circular" ? "Bucle circular" : issue.type === "contradiction" ? "Contradicció" : "Inconsistència"}
+              {issue.type === "circular" ? t("Bucle circular") : issue.type === "contradiction" ? t("Contradicció") : t("Inconsistència")}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-3 space-y-2">
@@ -186,10 +187,10 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
             {issue.fix && (
               <Button size="sm" variant="outline" className="h-6 text-xs gap-1" onClick={async () => {
                 await issue.fix!();
-                toast.success("Corregit!");
+                toast.success(t("Corregit!"));
                 analyze();
               }}>
-                <Wand2 className="h-3 w-3" /> Corregir
+                <Wand2 className="h-3 w-3" /> {t("Corregir")}
               </Button>
             )}
           </CardContent>

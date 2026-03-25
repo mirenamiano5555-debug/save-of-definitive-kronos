@@ -205,7 +205,7 @@ const es: Record<string, string> = {
 
   // Detail pages
   "Tancat": "Cerrado",
-  "Obert": "Obert",
+  "Obert": "Abierto",
   "Info": "Info",
   "Obj": "Obj",
   "Exportar": "Exportar",
@@ -380,6 +380,7 @@ const es: Record<string, string> = {
   "Cota superior": "Cota superior",
   "Cota inferior": "Cota inferior",
   "usuari": "usuario",
+  "Creant...": "Creando...",
 };
 
 const en: Record<string, string> = {
@@ -752,6 +753,7 @@ const en: Record<string, string> = {
   "Dades Identificactives": "Identification Data",
   "Datació": "Dating",
   "Documentació i Mostres": "Documentation and Samples",
+  "Creant...": "Creating...",
 };
 
 export const translations: Record<Lang, Record<string, string>> = {

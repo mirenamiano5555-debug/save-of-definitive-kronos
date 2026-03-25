@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +25,7 @@ interface Template {
 
 export default function TemplateManager({ type, getCurrentData, applyData }: TemplateManagerProps) {
   const { user } = useAuth();
+  const { t } = useT();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [newName, setNewName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -44,7 +46,7 @@ export default function TemplateManager({ type, getCurrentData, applyData }: Tem
 
   const handleSave = async () => {
     if (!user || !newName.trim()) {
-      toast.error("Escriu un nom per la plantilla");
+      toast.error(t("Escriu un nom per la plantilla"));
       return;
     }
     setSaving(true);
@@ -56,7 +58,7 @@ export default function TemplateManager({ type, getCurrentData, applyData }: Tem
     });
     if (error) toast.error(error.message);
     else {
-      toast.success("Plantilla guardada!");
+      toast.success(t("Plantilla guardada!"));
       setNewName("");
       fetchTemplates();
     }
@@ -64,10 +66,10 @@ export default function TemplateManager({ type, getCurrentData, applyData }: Tem
   };
 
   const handleLoad = (templateId: string) => {
-    const tpl = templates.find((t) => t.id === templateId);
+    const tpl = templates.find((tp) => tp.id === templateId);
     if (tpl) {
       applyData(tpl.data);
-      toast.success(`Plantilla "${tpl.name}" aplicada`);
+      toast.success(`${t("Plantilles")}: "${tpl.name}"`);
     }
   };
 
@@ -75,7 +77,7 @@ export default function TemplateManager({ type, getCurrentData, applyData }: Tem
     const { error } = await supabase.from("templates").delete().eq("id", templateId);
     if (error) toast.error(error.message);
     else {
-      toast.success("Plantilla eliminada");
+      toast.success(t("Plantilla eliminada"));
       fetchTemplates();
     }
   };
@@ -83,29 +85,29 @@ export default function TemplateManager({ type, getCurrentData, applyData }: Tem
   return (
     <div className="border border-border rounded-lg p-3 space-y-3 bg-muted/30">
       <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-        <FolderOpen className="h-4 w-4" /> Plantilles
+        <FolderOpen className="h-4 w-4" /> {t("Plantilles")}
       </h4>
 
       {templates.length > 0 && (
         <div className="space-y-2">
           <Select onValueChange={handleLoad}>
-            <SelectTrigger><SelectValue placeholder="Carregar plantilla..." /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t("Carregar plantilla...")} /></SelectTrigger>
             <SelectContent>
-              {templates.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+              {templates.map((tp) => (
+                <SelectItem key={tp.id} value={tp.id}>{tp.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <div className="flex flex-wrap gap-1">
-            {templates.map((t) => (
+            {templates.map((tp) => (
               <Button
-                key={t.id}
+                key={tp.id}
                 variant="ghost"
                 size="sm"
                 className="text-xs text-destructive h-6"
-                onClick={() => handleDelete(t.id)}
+                onClick={() => handleDelete(tp.id)}
               >
-                ✕ {t.name}
+                ✕ {tp.name}
               </Button>
             ))}
           </div>
@@ -114,13 +116,13 @@ export default function TemplateManager({ type, getCurrentData, applyData }: Tem
 
       <div className="flex gap-2">
         <Input
-          placeholder="Nom de la plantilla"
+          placeholder={t("Nom de la plantilla")}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           className="text-sm h-8"
         />
         <Button size="sm" variant="outline" onClick={handleSave} disabled={saving} className="h-8 gap-1">
-          <Save className="h-3 w-3" /> Desar
+          <Save className="h-3 w-3" /> {t("Desar")}
         </Button>
       </div>
     </div>

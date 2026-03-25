@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import TemplateManager from "@/components/TemplateManager";
 export default function JacimentForm({ editId }: { editId?: string }) {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { t } = useT();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [period, setPeriod] = useState("");
@@ -30,13 +32,8 @@ export default function JacimentForm({ editId }: { editId?: string }) {
     if (editId) {
       supabase.from("jaciments").select("*").eq("id", editId).single().then(({ data }) => {
         if (data) {
-          setName(data.name);
-          setPeriod(data.period || "");
-          setDescription(data.description || "");
-          setVisibility(data.visibility);
-          setLat(data.latitude);
-          setLng(data.longitude);
-          setImageUrl(data.image_url || "");
+          setName(data.name); setPeriod(data.period || ""); setDescription(data.description || "");
+          setVisibility(data.visibility); setLat(data.latitude); setLng(data.longitude); setImageUrl(data.image_url || "");
         }
       });
     }
@@ -45,50 +42,30 @@ export default function JacimentForm({ editId }: { editId?: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (profile?.role !== "director") {
-      toast.error("Només els usuaris amb rol 'director' poden crear jaciments");
-      return;
-    }
-    if (!imageUrl) {
-      toast.error("La imatge és obligatòria");
-      return;
-    }
+    if (profile?.role !== "director") { toast.error(t("Només els usuaris amb rol 'director' poden crear jaciments")); return; }
+    if (!imageUrl) { toast.error(t("La imatge és obligatòria")); return; }
     setLoading(true);
 
     const payload = {
-      name,
-      period,
-      description,
-      visibility: visibility as any,
-      latitude: lat,
-      longitude: lng,
-      image_url: imageUrl,
-      entity: profile?.entity || "",
-      created_by: user.id,
+      name, period, description, visibility: visibility as any,
+      latitude: lat, longitude: lng, image_url: imageUrl,
+      entity: profile?.entity || "", created_by: user.id,
     };
 
     let error;
-    if (editId) {
-      ({ error } = await supabase.from("jaciments").update(payload).eq("id", editId));
-    } else {
-      ({ error } = await supabase.from("jaciments").insert(payload));
-    }
+    if (editId) { ({ error } = await supabase.from("jaciments").update(payload).eq("id", editId)); }
+    else { ({ error } = await supabase.from("jaciments").insert(payload)); }
 
     if (error) toast.error(error.message);
-    else {
-      toast.success(editId ? "Jaciment actualitzat!" : "Jaciment creat!");
-      navigate(-1);
-    }
+    else { toast.success(editId ? t("Jaciment actualitzat!") : t("Jaciment creat!")); navigate(-1); }
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-xl font-serif font-bold">{editId ? "Editar" : "Nou"} Jaciment</h1>
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+        <h1 className="text-xl font-serif font-bold">{editId ? t("Editar") : t("Nou")} {t("Jaciment")}</h1>
       </header>
 
       <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-24 animate-fade-in">
@@ -96,60 +73,47 @@ export default function JacimentForm({ editId }: { editId?: string }) {
           type="jaciment"
           getCurrentData={() => ({ name, period, description, visibility, lat, lng, imageUrl })}
           applyData={(d) => {
-            if (d.name) setName(d.name);
-            if (d.period) setPeriod(d.period);
-            if (d.description) setDescription(d.description);
-            if (d.visibility) setVisibility(d.visibility);
-            if (d.lat) setLat(d.lat);
-            if (d.lng) setLng(d.lng);
-            if (d.imageUrl) setImageUrl(d.imageUrl);
+            if (d.name) setName(d.name); if (d.period) setPeriod(d.period);
+            if (d.description) setDescription(d.description); if (d.visibility) setVisibility(d.visibility);
+            if (d.lat) setLat(d.lat); if (d.lng) setLng(d.lng); if (d.imageUrl) setImageUrl(d.imageUrl);
           }}
         />
 
         <Accordion type="multiple" defaultValue={["imatge", "dades", "ubicacio", "config"]} className="space-y-2">
           <AccordionItem value="imatge">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Imatge</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Imatge")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
-              <ImageUpload value={imageUrl} onChange={setImageUrl} label="Imatge del jaciment *" folder="jaciments" />
+              <ImageUpload value={imageUrl} onChange={setImageUrl} label={t("Imatge del jaciment *")} folder="jaciments" />
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="dades">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Dades bàsiques</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Dades bàsiques")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
-              <div>
-                <Label>Nom del jaciment *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-              <div>
-                <Label>Període històric</Label>
-                <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="p.ex. Romà, Medieval..." />
-              </div>
-              <div>
-                <Label>Descripció</Label>
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
-              </div>
+              <div><Label>{t("Nom del jaciment *")}</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
+              <div><Label>{t("Període històric")}</Label><Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder={t("p.ex. Romà, Medieval...")} /></div>
+              <div><Label>{t("Descripció")}</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} /></div>
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="ubicacio">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Ubicació</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Ubicació")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <MapPicker lat={lat} lng={lng} onLocationChange={(la, ln) => { setLat(la); setLng(ln); }} />
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="config">
-            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">Configuració</AccordionTrigger>
+            <AccordionTrigger className="font-serif text-lg font-semibold text-primary">{t("Configuració")}</AccordionTrigger>
             <AccordionContent className="space-y-3 pt-2">
               <div>
-                <Label>Visibilitat</Label>
+                <Label>{t("Visibilitat")}</Label>
                 <Select value={visibility} onValueChange={setVisibility}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="public">Públic</SelectItem>
-                    <SelectItem value="entitat">Només entitat</SelectItem>
-                    <SelectItem value="esbos">Esbós</SelectItem>
+                    <SelectItem value="public">{t("Públic")}</SelectItem>
+                    <SelectItem value="entitat">{t("Només entitat")}</SelectItem>
+                    <SelectItem value="esbos">{t("Esbós")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -158,7 +122,7 @@ export default function JacimentForm({ editId }: { editId?: string }) {
         </Accordion>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Guardant..." : editId ? "Actualitzar" : "Crear jaciment"}
+          {loading ? t("Guardant...") : editId ? t("Actualitzar") : t("Crear jaciment")}
         </Button>
       </form>
     </div>

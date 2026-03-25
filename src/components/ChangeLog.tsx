@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/contexts/LanguageContext";
 import { Clock } from "lucide-react";
 
 interface LogEntry {
@@ -13,6 +14,7 @@ interface LogEntry {
 export default function ChangeLog({ tableName, recordId }: { tableName: string; recordId: string }) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t, lang } = useT();
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -25,7 +27,6 @@ export default function ChangeLog({ tableName, recordId }: { tableName: string; 
         .limit(50);
 
       if (data && data.length > 0) {
-        // Fetch profiles for user names
         const userIds = [...new Set(data.map(d => d.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
@@ -40,8 +41,10 @@ export default function ChangeLog({ tableName, recordId }: { tableName: string; 
     fetchLogs();
   }, [tableName, recordId]);
 
-  if (loading) return <p className="text-sm text-muted-foreground">Carregant historial...</p>;
-  if (logs.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">Sense canvis registrats.</p>;
+  const dateLocale = lang === "en" ? "en" : lang === "es" ? "es" : "ca";
+
+  if (loading) return <p className="text-sm text-muted-foreground">{t("Carregant historial...")}</p>;
+  if (logs.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">{t("Sense canvis registrats.")}</p>;
 
   return (
     <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -53,9 +56,9 @@ export default function ChangeLog({ tableName, recordId }: { tableName: string; 
           <div key={log.id} className="border border-border rounded-md p-2 text-xs">
             <div className="flex items-center gap-1 text-muted-foreground mb-1">
               <Clock className="h-3 w-3" />
-              <span>{new Date(log.created_at).toLocaleString("ca")}</span>
+              <span>{new Date(log.created_at).toLocaleString(dateLocale)}</span>
               <span className="font-medium text-foreground ml-1">
-                {log.profile?.full_name || "Usuari"}
+                {log.profile?.full_name || t("Usuari")}
               </span>
             </div>
             {changedFields.length > 0 ? (
@@ -69,7 +72,7 @@ export default function ChangeLog({ tableName, recordId }: { tableName: string; 
                 ))}
               </ul>
             ) : (
-              <p>Creat</p>
+              <p>{t("Creat")}</p>
             )}
           </div>
         );
