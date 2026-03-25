@@ -347,9 +347,13 @@ const es: Record<string, string> = {
 
   // AI
   "Converses": "Conversaciones",
+  "Nova conversa": "Nueva conversación",
   "Cap conversa encara": "Ninguna conversación aún",
   "Escriu la teva pregunta...": "Escribe tu pregunta...",
   "Adjuntar imatges o documents": "Adjuntar imágenes o documentos",
+  "Massa peticions. Espera uns segons i torna a provar.": "Demasiadas peticiones. Espera unos segundos y vuelve a intentarlo.",
+  "Crèdits esgotats. Contacta l'administrador.": "Créditos agotados. Contacta al administrador.",
+  "Error de connexió. Torna a provar.": "Error de conexión. Vuelve a intentarlo.",
 
   // Map picker
   "Mostrar mapa": "Mostrar mapa",
