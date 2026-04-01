@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Upload, Search, PenLine, Smartphone, Map, Plus, User, MessageSquare, LogOut, Bot } from "lucide-react";
+import { Search, PenLine, Smartphone, Plus, User, MessageSquare, LogOut, Bot, HelpCircle } from "lucide-react";
 import logoKronos from "@/assets/logo-kronos.png";
 import NotificationBell from "@/components/NotificationBell";
 
