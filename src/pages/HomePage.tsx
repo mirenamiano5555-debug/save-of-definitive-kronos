@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Upload, Search, PenLine, Smartphone, Map, Plus, User, MessageSquare, LogOut, Bot } from "lucide-react";
+import { Search, PenLine, Smartphone, Plus, User, MessageSquare, LogOut, Bot, HelpCircle } from "lucide-react";
 import logoKronos from "@/assets/logo-kronos.png";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -19,7 +19,6 @@ export default function HomePage() {
     { icon: Plus, title: t("Pujar Objecte Nou"), description: t("Documenta una nova troballa amb tots els camps requerits."), onClick: () => navigate("/upload") },
     { icon: Search, title: t("Cercar"), description: t("Busca objectes, jaciments i UEs amb filtres avançats."), onClick: () => navigate("/search") },
     { icon: PenLine, title: t("Els Meus Ítems"), description: t("Gestiona les teves troballes. Exporta múltiples fitxes alhora."), onClick: () => navigate("/my-items") },
-    { icon: Map, title: t("Mapa de Jaciments"), description: t("Visualitza tots els jaciments públics en un mapa interactiu."), onClick: () => navigate("/map") },
     { icon: Bot, title: t("Assistent IA"), description: t("Xatbot intel·ligent amb accés a totes les dades per ajudar-te."), onClick: () => navigate("/ai-assistant") },
   ];
 
@@ -63,7 +62,7 @@ export default function HomePage() {
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="ghost" size="icon" onClick={() => navigate("/upload")}><Upload className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/tutorial")} title={t("Guia de funcions")}><HelpCircle className="h-5 w-5" /></Button>
           <NotificationBell />
           <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}><MessageSquare className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}><User className="h-5 w-5" /></Button>

@@ -21,7 +21,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback((key: string): string => {
-    if (lang === "ca") return key;
     return translations[lang][key] || key;
   }, [lang]);
 

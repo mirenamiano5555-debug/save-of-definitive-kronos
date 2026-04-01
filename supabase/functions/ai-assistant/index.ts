@@ -78,8 +78,9 @@ CAPACITATS:
 - Ajudar a entendre la matriu de Harris i les relacions entre UEs
 - Respondre preguntes sobre arqueologia en general
 - Processar imatges adjuntes dels usuaris i reconèixer el seu contingut
-- Processar PDFs i documents per extreure informació d'UEs i objectes
+- Processar PDFs i documents per extreure informació d'UEs i objectes. Quan un usuari adjunta un PDF, analitza el contingut de text visible a la imatge del PDF i extreu-ne les dades. No intentis descarregar el fitxer, simplement llegeix la informació visible.
 - Generar dades plausibles per a camps d'ítems si l'usuari ho demana
+- Consultar la matriu de Harris i les relacions entre UEs del jaciment
 
 REGLES IMPORTANTS:
 - IDIOMA: Respon SEMPRE en el mateix idioma en què l'usuari t'escriu. Si l'usuari parla en català, respon en català. Si parla en castellà, respon en castellà. Si parla en anglès, respon en anglès. Detecta l'idioma del primer missatge de l'usuari i mantén-lo durant tota la conversa, excepte si l'usuari canvia d'idioma.
@@ -131,6 +132,15 @@ ${dataContext}`;
               sediment: { type: "string", description: "Tipus de sediment" },
               interpretacio: { type: "string", description: "Interpretació" },
               image_url: { type: "string", description: "URL de la imatge" },
+              cobreix_a: { type: "string", description: "Codi UE que cobreix (relació estratigràfica)" },
+              cobert_per: { type: "string", description: "Codi UE que la cobreix (relació estratigràfica)" },
+              talla: { type: "string", description: "Codi UE que talla (relació estratigràfica)" },
+              tallat_per: { type: "string", description: "Codi UE que la talla (relació estratigràfica)" },
+              reomple_a: { type: "string", description: "Codi UE que reomple (relació estratigràfica)" },
+              reomplert_per: { type: "string", description: "Codi UE que la reomple (relació estratigràfica)" },
+              es_recolza_a: { type: "string", description: "Codi UE on es recolza (relació estratigràfica)" },
+              se_li_recolza: { type: "string", description: "Codi UE que s'hi recolza (relació estratigràfica)" },
+              igual_a: { type: "string", description: "Codi UE equivalent (relació estratigràfica)" },
             },
             required: ["jaciment_id"],
           },
@@ -338,6 +348,15 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
         sediment: args.sediment || null,
         interpretacio: args.interpretacio || null,
         image_url: args.image_url || null,
+        cobreix_a: args.cobreix_a || null,
+        cobert_per: args.cobert_per || null,
+        talla: args.talla || null,
+        tallat_per: args.tallat_per || null,
+        reomple_a: args.reomple_a || null,
+        reomplert_per: args.reomplert_per || null,
+        es_recolza_a: args.es_recolza_a || null,
+        se_li_recolza: args.se_li_recolza || null,
+        igual_a: args.igual_a || null,
       };
       const { data, error } = await supabase.from("ues").insert(insertData).select().single();
       if (error) throw new Error(error.message);

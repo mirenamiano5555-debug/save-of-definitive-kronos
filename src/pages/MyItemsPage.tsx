@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Box, Layers, Mountain } from "lucide-react";
+import { ArrowLeft, Box, Layers, Mountain, Search } from "lucide-react";
 import ItemCard from "@/components/ItemCard";
 import MassExport from "@/components/MassExport";
 
@@ -18,6 +19,7 @@ export default function MyItemsPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
 
   const fetchItems = async () => {
     if (!user) return;
@@ -40,6 +42,17 @@ export default function MyItemsPage() {
 
   useEffect(() => { fetchItems(); }, [tab, user]);
 
+  const filtered = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.toLowerCase();
+    return items.filter(i => {
+      const name = (i.name || i.codi_ue || "").toLowerCase();
+      const id = (i.object_id || i.codi_ue || "").toLowerCase();
+      const jaciment = (i.jaciments?.name || "").toLowerCase();
+      return name.includes(q) || id.includes(q) || jaciment.includes(q);
+    });
+  }, [items, search]);
+
   const toggleSelect = (id: string) => {
     setSelected(prev => {
       const next = new Set(prev);
@@ -49,8 +62,8 @@ export default function MyItemsPage() {
   };
 
   const selectAll = () => {
-    if (selected.size === items.length) setSelected(new Set());
-    else setSelected(new Set(items.map(i => i.id)));
+    if (selected.size === filtered.length) setSelected(new Set());
+    else setSelected(new Set(filtered.map(i => i.id)));
   };
 
   const selectedItems = items.filter(i => selected.has(i.id));
@@ -65,6 +78,16 @@ export default function MyItemsPage() {
       </header>
 
       <div className="p-4 animate-fade-in">
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t("Cerca per nom, ID, lloc...")}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="w-full">
             <TabsTrigger value="objectes" className="flex-1 gap-1"><Box className="h-3 w-3" /> {t("Objectes")}</TabsTrigger>
@@ -72,10 +95,10 @@ export default function MyItemsPage() {
             <TabsTrigger value="jaciments" className="flex-1 gap-1"><Mountain className="h-3 w-3" /> {t("Jaciments")}</TabsTrigger>
           </TabsList>
 
-          {items.length > 0 && (
+          {filtered.length > 0 && (
             <div className="flex items-center justify-between mt-3">
               <Button variant="ghost" size="sm" onClick={selectAll} className="h-7 text-xs">
-                {selected.size === items.length ? t("Deseleccionar") : t("Seleccionar tot")}
+                {selected.size === filtered.length ? t("Deseleccionar") : t("Seleccionar tot")}
               </Button>
               {selected.size > 0 && <MassExport items={selectedItems} type={tab as any} />}
             </div>
@@ -83,8 +106,8 @@ export default function MyItemsPage() {
 
           <TabsContent value={tab} className="space-y-3 mt-2">
             {loading && <p className="text-center text-muted-foreground">{t("Carregant...")}</p>}
-            {!loading && items.length === 0 && <p className="text-center text-muted-foreground">{t("Encara no tens")} {t(tab === "objectes" ? "Objectes" : tab === "ues" ? "UEs" : "Jaciments").toLowerCase()}</p>}
-            {items.map(item => (
+            {!loading && filtered.length === 0 && <p className="text-center text-muted-foreground">{search ? t("Cap resultat trobat") : `${t("Encara no tens")} ${t(tab === "objectes" ? "Objectes" : tab === "ues" ? "UEs" : "Jaciments").toLowerCase()}`}</p>}
+            {filtered.map(item => (
               <div key={item.id} className="flex items-center gap-2">
                 <Checkbox checked={selected.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
                 <div className="flex-1">
