@@ -284,15 +284,15 @@ export default function AIAssistantPage() {
                 className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer text-sm hover:bg-muted group ${activeConvId === c.id ? "bg-muted" : ""}`}
                 onClick={() => selectConversation(c.id)}
               >
-                <span className="truncate flex-1">{c.title}</span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
+                  className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100"
                   onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
+                <span className="truncate flex-1">{c.title}</span>
               </div>
             ))}
             {conversations.length === 0 && (
