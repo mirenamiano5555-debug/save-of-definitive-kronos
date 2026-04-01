@@ -347,6 +347,15 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
         sediment: args.sediment || null,
         interpretacio: args.interpretacio || null,
         image_url: args.image_url || null,
+        cobreix_a: args.cobreix_a || null,
+        cobert_per: args.cobert_per || null,
+        talla: args.talla || null,
+        tallat_per: args.tallat_per || null,
+        reomple_a: args.reomple_a || null,
+        reomplert_per: args.reomplert_per || null,
+        es_recolza_a: args.es_recolza_a || null,
+        se_li_recolza: args.se_li_recolza || null,
+        igual_a: args.igual_a || null,
       };
       const { data, error } = await supabase.from("ues").insert(insertData).select().single();
       if (error) throw new Error(error.message);
