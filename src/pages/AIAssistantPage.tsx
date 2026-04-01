@@ -379,7 +379,7 @@ export default function AIAssistantPage() {
                     <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-medium truncate max-w-[8rem]">{att.name || "fitxer"}</span>
-                      <span className="text-[10px] text-muted-foreground">{att.type === "file" ? "PDF" : att.type.toUpperCase()}</span>
+                      <span className="text-[10px] text-muted-foreground">PDF</span>
                     </div>
                   </div>
                 )}
