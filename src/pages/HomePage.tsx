@@ -62,7 +62,7 @@ export default function HomePage() {
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="ghost" size="icon" onClick={() => navigate("/upload")}><Upload className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/tutorial")} title={t("Guia de funcions")}><HelpCircle className="h-5 w-5" /></Button>
           <NotificationBell />
           <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}><MessageSquare className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}><User className="h-5 w-5" /></Button>
