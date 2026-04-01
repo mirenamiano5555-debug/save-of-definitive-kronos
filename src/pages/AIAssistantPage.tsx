@@ -369,15 +369,18 @@ export default function AIAssistantPage() {
         </div>
 
         {pendingAttachments.length > 0 && (
-          <div className="px-4 pb-2 flex gap-2 flex-wrap">
+          <div className="px-4 pb-2 flex gap-2 flex-wrap border-t border-border pt-2">
             {pendingAttachments.map((att, idx) => (
-              <div key={idx} className="relative">
+              <div key={idx} className="relative group">
                 {att.type === "image" ? (
                   <img src={att.url} alt="Preview" className="h-16 rounded object-cover border border-border" />
                 ) : (
-                  <div className="h-16 w-20 rounded border border-border bg-muted flex flex-col items-center justify-center gap-1">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground truncate max-w-[4.5rem]">{att.name || "fitxer"}</span>
+                  <div className="h-16 px-3 rounded border border-border bg-muted flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-medium truncate max-w-[8rem]">{att.name || "fitxer"}</span>
+                      <span className="text-[10px] text-muted-foreground">{att.type === "file" ? "PDF" : att.type.toUpperCase()}</span>
+                    </div>
                   </div>
                 )}
                 <button
