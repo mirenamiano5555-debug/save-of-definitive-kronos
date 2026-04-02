@@ -852,6 +852,24 @@ const en: Record<string, string> = {
   "Datació": "Dating",
   "Documentació i Mostres": "Documentation and Samples",
   "Creant...": "Creating...",
+
+  // User Management
+  "Administrar usuaris": "Manage users",
+  "Sol·licituds pendents": "Pending requests",
+  "Usuaris de l'entitat": "Entity users",
+  "Vol ser:": "Wants to be:",
+  "Acceptar": "Accept",
+  "Rebutjar": "Reject",
+  "Sol·licitud aprovada": "Request approved",
+  "Has estat aprovat/da com a": "You have been approved as",
+  "Sol·licitud rebutjada": "Request rejected",
+  "La teva sol·licitud de rol ha estat rebutjada. Tens accés com a visitant.": "Your role request has been rejected. You have visitor access.",
+  "Usuari aprovat!": "User approved!",
+  "Rol actualitzat!": "Role updated!",
+  "Cap usuari trobat": "No users found",
+  "Contacta un director per canviar el teu rol.": "Contact a director to change your role.",
+  "Accés immediat com a visitant (només lectura).": "Immediate access as visitor (read-only).",
+  "El teu registre haurà de ser aprovat per un director.": "Your registration must be approved by a director.",
 };
 
 const ca: Record<string, string> = {
