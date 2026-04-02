@@ -108,6 +108,7 @@ export default function AuthPage() {
                     <SelectContent>
                       <SelectItem value="tecnic">{t("Tècnic")}</SelectItem>
                       <SelectItem value="director">{t("Director")}</SelectItem>
+                      <SelectItem value="visitant">{t("Visitant")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
