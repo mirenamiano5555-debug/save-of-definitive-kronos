@@ -64,6 +64,9 @@ export default function HomePage() {
               </div>
             </DialogContent>
           </Dialog>
+          {profile?.role === "director" && (
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin/users")} title={t("Administrar usuaris")}><Shield className="h-5 w-5" /></Button>
+          )}
           <Button variant="ghost" size="icon" onClick={() => navigate("/tutorial")} title={t("Guia de funcions")}><HelpCircle className="h-5 w-5" /></Button>
           <NotificationBell />
           <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}><MessageSquare className="h-5 w-5" /></Button>

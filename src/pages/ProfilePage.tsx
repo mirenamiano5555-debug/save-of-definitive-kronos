@@ -32,12 +32,9 @@ export default function ProfilePage() {
     const { error } = await supabase.from("profiles").update({
       full_name: fullName,
       entity,
-      role: role as any,
       location,
       avatar_url: avatarUrl,
     }).eq("user_id", user.id);
-
-    await supabase.from("user_roles").upsert({ user_id: user.id, role: role as any }, { onConflict: "user_id,role" });
 
     if (error) toast.error(error.message);
     else {

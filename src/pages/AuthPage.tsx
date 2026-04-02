@@ -103,14 +103,16 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <Label htmlFor="role">{t("Rol")}</Label>
-                  <Select value={role} onValueChange={(v) => setRole(v as "tecnic" | "director")}>
+                  <Select value={role} onValueChange={(v) => setRole(v as "tecnic" | "director" | "visitant")}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="tecnic">{t("Tècnic")}</SelectItem>
-                      <SelectItem value="director">{t("Director")}</SelectItem>
                       <SelectItem value="visitant">{t("Visitant")}</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {role === "visitant" ? t("Accés immediat com a visitant (només lectura).") : t("El teu registre haurà de ser aprovat per un director.")}
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="location">{t("Ubicació (opcional)")}</Label>
