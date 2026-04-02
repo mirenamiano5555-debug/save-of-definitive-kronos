@@ -43,8 +43,6 @@ serve(async (req) => {
     const { data: userRoles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
     const isVisitant = userRoles?.some((r: any) => r.role === "visitant") && !userRoles?.some((r: any) => r.role === "tecnic" || r.role === "director");
 
-    // Use service role for data operations
-    const supabase = createClient(supabaseUrl, serviceKey);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
