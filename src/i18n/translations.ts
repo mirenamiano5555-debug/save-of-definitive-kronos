@@ -430,6 +430,24 @@ const es: Record<string, string> = {
   "Cota inferior": "Cota inferior",
   "usuari": "usuario",
   "Creant...": "Creando...",
+
+  // User Management
+  "Administrar usuaris": "Administrar usuarios",
+  "Sol·licituds pendents": "Solicitudes pendientes",
+  "Usuaris de l'entitat": "Usuarios de la entidad",
+  "Vol ser:": "Quiere ser:",
+  "Acceptar": "Aceptar",
+  "Rebutjar": "Rechazar",
+  "Sol·licitud aprovada": "Solicitud aprobada",
+  "Has estat aprovat/da com a": "Has sido aprobado/a como",
+  "Sol·licitud rebutjada": "Solicitud rechazada",
+  "La teva sol·licitud de rol ha estat rebutjada. Tens accés com a visitant.": "Tu solicitud de rol ha sido rechazada. Tienes acceso como visitante.",
+  "Usuari aprovat!": "¡Usuario aprobado!",
+  "Rol actualitzat!": "¡Rol actualizado!",
+  "Cap usuari trobat": "Ningún usuario encontrado",
+  "Contacta un director per canviar el teu rol.": "Contacta a un director para cambiar tu rol.",
+  "Accés immediat com a visitant (només lectura).": "Acceso inmediato como visitante (solo lectura).",
+  "El teu registre haurà de ser aprovat per un director.": "Tu registro debe ser aprobado por un director.",
 };
 
 const en: Record<string, string> = {
@@ -852,6 +870,24 @@ const en: Record<string, string> = {
   "Datació": "Dating",
   "Documentació i Mostres": "Documentation and Samples",
   "Creant...": "Creating...",
+
+  // User Management
+  "Administrar usuaris": "Manage users",
+  "Sol·licituds pendents": "Pending requests",
+  "Usuaris de l'entitat": "Entity users",
+  "Vol ser:": "Wants to be:",
+  "Acceptar": "Accept",
+  "Rebutjar": "Reject",
+  "Sol·licitud aprovada": "Request approved",
+  "Has estat aprovat/da com a": "You have been approved as",
+  "Sol·licitud rebutjada": "Request rejected",
+  "La teva sol·licitud de rol ha estat rebutjada. Tens accés com a visitant.": "Your role request has been rejected. You have visitor access.",
+  "Usuari aprovat!": "User approved!",
+  "Rol actualitzat!": "Role updated!",
+  "Cap usuari trobat": "No users found",
+  "Contacta un director per canviar el teu rol.": "Contact a director to change your role.",
+  "Accés immediat com a visitant (només lectura).": "Immediate access as visitor (read-only).",
+  "El teu registre haurà de ser aprovat per un director.": "Your registration must be approved by a director.",
 };
 
 const ca: Record<string, string> = {

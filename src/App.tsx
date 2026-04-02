@@ -23,6 +23,7 @@ import MessagesPage from "./pages/MessagesPage";
 import MapPage from "./pages/MapPage";
 import AIAssistantPage from "./pages/AIAssistantPage";
 import TutorialPage from "./pages/TutorialPage";
+import UserManagementPage from "./pages/UserManagementPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ const AppRoutes = () => (
     <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
     <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistantPage /></ProtectedRoute>} />
     <Route path="/tutorial" element={<ProtectedRoute><TutorialPage /></ProtectedRoute>} />
+    <Route path="/admin/users" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, PenLine, Smartphone, Plus, User, MessageSquare, LogOut, Bot, HelpCircle } from "lucide-react";
+import { Search, PenLine, Smartphone, Plus, User, MessageSquare, LogOut, Bot, HelpCircle, Shield } from "lucide-react";
 import logoKronos from "@/assets/logo-kronos.png";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -64,6 +64,9 @@ export default function HomePage() {
               </div>
             </DialogContent>
           </Dialog>
+          {profile?.role === "director" && (
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin/users")} title={t("Administrar usuaris")}><Shield className="h-5 w-5" /></Button>
+          )}
           <Button variant="ghost" size="icon" onClick={() => navigate("/tutorial")} title={t("Guia de funcions")}><HelpCircle className="h-5 w-5" /></Button>
           <NotificationBell />
           <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}><MessageSquare className="h-5 w-5" /></Button>

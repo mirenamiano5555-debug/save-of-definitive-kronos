@@ -32,12 +32,9 @@ export default function ProfilePage() {
     const { error } = await supabase.from("profiles").update({
       full_name: fullName,
       entity,
-      role: role as any,
       location,
       avatar_url: avatarUrl,
     }).eq("user_id", user.id);
-
-    await supabase.from("user_roles").upsert({ user_id: user.id, role: role as any }, { onConflict: "user_id,role" });
 
     if (error) toast.error(error.message);
     else {
@@ -81,14 +78,10 @@ export default function ProfilePage() {
         </div>
         <div>
           <Label>{t("Rol")}</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as any)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tecnic">{t("Tècnic")}</SelectItem>
-              <SelectItem value="director">{t("Director")}</SelectItem>
-              <SelectItem value="visitant">{t("Visitant")}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted text-sm">
+            {t(role === "tecnic" ? "Tècnic" : role === "director" ? "Director" : "Visitant")}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">{t("Contacta un director per canviar el teu rol.")}</p>
         </div>
         <div>
           <Label>{t("Ubicació")}</Label>

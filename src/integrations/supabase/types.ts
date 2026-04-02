@@ -303,34 +303,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved: boolean
           avatar_url: string | null
           created_at: string
           entity: string
           full_name: string | null
           id: string
           location: string | null
+          requested_role: Database["public"]["Enums"]["app_role"] | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string
         }
         Insert: {
+          approved?: boolean
           avatar_url?: string | null
           created_at?: string
           entity?: string
           full_name?: string | null
           id?: string
           location?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"] | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id: string
         }
         Update: {
+          approved?: boolean
           avatar_url?: string | null
           created_at?: string
           entity?: string
           full_name?: string | null
           id?: string
           location?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"] | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
