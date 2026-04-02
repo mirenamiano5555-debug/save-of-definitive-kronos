@@ -162,6 +162,15 @@ export default function UEForm({ editId }: { editId?: string }) {
 
   const relationProps = { ueOptions, jacimentId, onUECreated: fetchUEOptions, currentUECode: codiUe };
 
+  if (isVisitant) return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="text-center space-y-4">
+        <p className="text-lg text-muted-foreground">{t("No tens permisos per pujar contingut.")}</p>
+        <Button variant="outline" onClick={() => navigate(-1)}>{t("Tornar")}</Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
