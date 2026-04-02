@@ -19,17 +19,7 @@ export default function JacimentForm({ editId }: { editId?: string }) {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { t } = useT();
-
-  if (profile?.role === "visitant") {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <p className="text-lg text-muted-foreground">{t("No tens permisos per pujar contingut.")}</p>
-          <Button variant="outline" onClick={() => navigate(-1)}>{t("Tornar")}</Button>
-        </div>
-      </div>
-    );
-  }
+  const isVisitant = profile?.role === "visitant";
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [period, setPeriod] = useState("");
