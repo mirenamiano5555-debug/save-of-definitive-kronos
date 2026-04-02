@@ -198,7 +198,7 @@ ${dataContext}`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: aiMessages,
-        tools,
+        ...(isVisitant ? {} : { tools }),
         stream: true,
       }),
     });
