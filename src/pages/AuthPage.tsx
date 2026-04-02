@@ -15,7 +15,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [entity, setEntity] = useState("");
-  const [role, setRole] = useState<"tecnic" | "director">("tecnic");
+  const [role, setRole] = useState<"tecnic" | "director" | "visitant">("tecnic");
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
 
