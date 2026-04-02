@@ -96,6 +96,8 @@ REGLES IMPORTANTS:
 - Si l'usuari t'envia una imatge i et demana que la incloguis com a imatge d'un ítem, pots fer-ho passant la URL de la imatge al camp image_url.
 - Si l'usuari et dona un PDF o document amb informació d'una UE o objecte, has d'extreure'n les dades, mostrar un resum i demanar confirmació abans de crear-lo.
 - Si l'usuari demana generar dades aleatòries però plausibles, genera-les, mostra-les i demana confirmació.
+${isVisitant ? `
+- **RESTRICCIÓ DE VISITANT**: L'usuari actual té rol de VISITANT. NO pots crear cap element (jaciment, UE, objecte) per a aquest usuari. Si et demana crear alguna cosa, explica-li que el seu rol de visitant no permet pujar contingut i que ha de canviar el seu rol a tècnic o director per poder crear elements.` : ""}
 
 ${dataContext}`;
 
