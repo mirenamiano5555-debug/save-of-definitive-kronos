@@ -44,7 +44,20 @@ function CategoryDropdown({ icon, title, description, onClick, expanded, onToggl
 export default function UploadPage() {
   const navigate = useNavigate();
   const { t } = useT();
+  const { profile } = useAuth();
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  if (profile?.role === "visitant") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <p className="text-lg text-muted-foreground">{t("No tens permisos per pujar contingut.")}</p>
+          <p className="text-sm text-muted-foreground">{t("Rol visitant: només lectura")}</p>
+          <Button variant="outline" onClick={() => navigate(-1)}>{t("Tornar")}</Button>
+        </div>
+      </div>
+    );
+  }
 
   const toggle = (key: string) => setExpanded(expanded === key ? null : key);
 
