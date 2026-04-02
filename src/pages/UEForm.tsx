@@ -31,8 +31,9 @@ function Field({ label, value, onChange, textarea, type }: { label: string; valu
 
 export default function UEForm({ editId }: { editId?: string }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useT();
+  const isVisitant = profile?.role === "visitant";
   const [loading, setLoading] = useState(false);
   const [jaciments, setJaciments] = useState<Jaciment[]>([]);
   const [ueOptions, setUeOptions] = useState<UEOption[]>([]);
@@ -160,6 +161,15 @@ export default function UEForm({ editId }: { editId?: string }) {
   };
 
   const relationProps = { ueOptions, jacimentId, onUECreated: fetchUEOptions, currentUECode: codiUe };
+
+  if (isVisitant) return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="text-center space-y-4">
+        <p className="text-lg text-muted-foreground">{t("No tens permisos per pujar contingut.")}</p>
+        <Button variant="outline" onClick={() => navigate(-1)}>{t("Tornar")}</Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">

@@ -39,6 +39,11 @@ serve(async (req) => {
     // Use service role for data operations
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Check if user is visitant
+    const { data: userRoles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const isVisitant = userRoles?.some((r: any) => r.role === "visitant") && !userRoles?.some((r: any) => r.role === "tecnic" || r.role === "director");
+
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -91,6 +96,8 @@ REGLES IMPORTANTS:
 - Si l'usuari t'envia una imatge i et demana que la incloguis com a imatge d'un ítem, pots fer-ho passant la URL de la imatge al camp image_url.
 - Si l'usuari et dona un PDF o document amb informació d'una UE o objecte, has d'extreure'n les dades, mostrar un resum i demanar confirmació abans de crear-lo.
 - Si l'usuari demana generar dades aleatòries però plausibles, genera-les, mostra-les i demana confirmació.
+${isVisitant ? `
+- **RESTRICCIÓ DE VISITANT**: L'usuari actual té rol de VISITANT. NO pots crear cap element (jaciment, UE, objecte) per a aquest usuari. Si et demana crear alguna cosa, explica-li que el seu rol de visitant no permet pujar contingut i que ha de canviar el seu rol a tècnic o director per poder crear elements.` : ""}
 
 ${dataContext}`;
 
@@ -191,7 +198,7 @@ ${dataContext}`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: aiMessages,
-        tools,
+        ...(isVisitant ? {} : { tools }),
         stream: true,
       }),
     });

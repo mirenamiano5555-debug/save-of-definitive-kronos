@@ -15,8 +15,10 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [showInstall, setShowInstall] = useState(false);
 
+  const isVisitant = profile?.role === "visitant";
+
   const actions = [
-    { icon: Plus, title: t("Pujar Objecte Nou"), description: t("Documenta una nova troballa amb tots els camps requerits."), onClick: () => navigate("/upload") },
+    ...(!isVisitant ? [{ icon: Plus, title: t("Pujar Objecte Nou"), description: t("Documenta una nova troballa amb tots els camps requerits."), onClick: () => navigate("/upload") }] : []),
     { icon: Search, title: t("Cercar"), description: t("Busca objectes, jaciments i UEs amb filtres avançats."), onClick: () => navigate("/search") },
     { icon: PenLine, title: t("Els Meus Ítems"), description: t("Gestiona les teves troballes. Exporta múltiples fitxes alhora."), onClick: () => navigate("/my-items") },
     { icon: Bot, title: t("Assistent IA"), description: t("Xatbot intel·ligent amb accés a totes les dades per ajudar-te."), onClick: () => navigate("/ai-assistant") },

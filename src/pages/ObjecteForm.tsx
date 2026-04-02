@@ -18,8 +18,9 @@ interface UE { id: string; codi_ue: string | null; jaciment_id: string; }
 
 export default function ObjecteForm({ editId }: { editId?: string }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useT();
+  const isVisitant = profile?.role === "visitant";
   const [loading, setLoading] = useState(false);
   const [jaciments, setJaciments] = useState<Jaciment[]>([]);
   const [ues, setUes] = useState<UE[]>([]);
@@ -107,6 +108,15 @@ export default function ObjecteForm({ editId }: { editId?: string }) {
   };
 
   const conservacioLabels = [t("Molt dolent"), t("Dolent"), t("Regular"), t("Bo"), t("Molt bo")];
+
+  if (isVisitant) return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="text-center space-y-4">
+        <p className="text-lg text-muted-foreground">{t("No tens permisos per pujar contingut.")}</p>
+        <Button variant="outline" onClick={() => navigate(-1)}>{t("Tornar")}</Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
