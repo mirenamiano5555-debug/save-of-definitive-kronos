@@ -23,6 +23,7 @@ import MessagesPage from "./pages/MessagesPage";
 import MapPage from "./pages/MapPage";
 import AIAssistantPage from "./pages/AIAssistantPage";
 import TutorialPage from "./pages/TutorialPage";
+import UserManagementPage from "./pages/UserManagementPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
