@@ -8,7 +8,7 @@ interface Profile {
   full_name: string | null;
   location: string | null;
   entity: string;
-  role: "tecnic" | "director" | "visitant";
+  role: "tecnic" | "director" | "visitant" | "admin";
   avatar_url: string | null;
 }
 

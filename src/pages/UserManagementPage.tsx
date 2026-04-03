@@ -27,25 +27,40 @@ export default function UserManagementPage() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isAdmin = profile?.role === "admin";
   const isDirector = profile?.role === "director";
+  const canManage = isAdmin || isDirector;
 
   useEffect(() => {
-    if (!isDirector) {
+    if (!canManage) {
       navigate("/");
       return;
     }
     fetchUsers();
-  }, [isDirector]);
+  }, [canManage]);
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from("profiles")
       .select("user_id, full_name, entity, role, approved, requested_role, avatar_url")
-      .eq("entity", profile?.entity || "")
       .order("created_at", { ascending: false });
+
+    // Directors only see their entity; admins see everyone
+    if (!isAdmin) {
+      query = query.eq("entity", profile?.entity || "");
+    }
+
+    const { data } = await query;
     if (data) setUsers(data as UserWithRole[]);
     setLoading(false);
+  };
+
+  const roleLabel = (r: string) => {
+    if (r === "tecnic") return t("Tècnic");
+    if (r === "director") return t("Director");
+    if (r === "admin") return t("Administrador");
+    return t("Visitant");
   };
 
   const handleApprove = async (userId: string, requestedRole: string) => {
@@ -61,7 +76,7 @@ export default function UserManagementPage() {
     await supabase.from("notifications").insert({
       user_id: userId,
       title: t("Sol·licitud aprovada"),
-      body: t("Has estat aprovat/da com a") + " " + t(requestedRole === "tecnic" ? "Tècnic" : requestedRole === "director" ? "Director" : "Visitant"),
+      body: t("Has estat aprovat/da com a") + " " + roleLabel(requestedRole),
       type: "approval",
       link: "/",
     });
@@ -90,6 +105,11 @@ export default function UserManagementPage() {
   };
 
   const handleChangeRole = async (userId: string, newRole: string) => {
+    // Only admins can promote to director or admin
+    if ((newRole === "director" || newRole === "admin") && !isAdmin) {
+      toast.error(t("Només els administradors poden assignar aquest rol."));
+      return;
+    }
     await supabase.from("profiles").update({ role: newRole as any }).eq("user_id", userId);
     await supabase.from("user_roles").delete().eq("user_id", userId);
     await supabase.from("user_roles").insert({ user_id: userId, role: newRole as any });
@@ -124,8 +144,9 @@ export default function UserManagementPage() {
                   <CardContent className="p-4 flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{u.full_name || t("usuari")}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.entity}</p>
                       <p className="text-sm text-muted-foreground">
-                        {t("Vol ser:")} <Badge variant="outline">{t(u.requested_role === "tecnic" ? "Tècnic" : u.requested_role === "director" ? "Director" : "Visitant")}</Badge>
+                        {t("Vol ser:")} <Badge variant="outline">{roleLabel(u.requested_role || "")}</Badge>
                       </p>
                     </div>
                     <div className="flex gap-2 shrink-0">
@@ -144,7 +165,9 @@ export default function UserManagementPage() {
         )}
 
         <div>
-          <h2 className="text-lg font-semibold mb-3">{t("Usuaris de l'entitat")}</h2>
+          <h2 className="text-lg font-semibold mb-3">
+            {isAdmin ? t("Tots els usuaris") : t("Usuaris de l'entitat")}
+          </h2>
           {loading ? (
             <p className="text-muted-foreground">{t("Carregant...")}</p>
           ) : approvedUsers.length === 0 ? (
@@ -156,19 +179,21 @@ export default function UserManagementPage() {
                   <CardContent className="p-4 flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{u.full_name || t("usuari")}</p>
+                      {isAdmin && <p className="text-xs text-muted-foreground truncate">{u.entity}</p>}
                       <Badge variant="secondary" className="mt-1">
-                        {t(u.role === "tecnic" ? "Tècnic" : u.role === "director" ? "Director" : "Visitant")}
+                        {roleLabel(u.role)}
                       </Badge>
                     </div>
-                    {u.user_id !== profile?.user_id && (
+                    {u.user_id !== profile?.user_id && u.role !== "admin" && (
                       <Select value={u.role} onValueChange={(v) => handleChangeRole(u.user_id, v)}>
                         <SelectTrigger className="w-36">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="tecnic">{t("Tècnic")}</SelectItem>
-                          <SelectItem value="director">{t("Director")}</SelectItem>
                           <SelectItem value="visitant">{t("Visitant")}</SelectItem>
+                          <SelectItem value="tecnic">{t("Tècnic")}</SelectItem>
+                          {isAdmin && <SelectItem value="director">{t("Director")}</SelectItem>}
+                          {isAdmin && <SelectItem value="admin">{t("Administrador")}</SelectItem>}
                         </SelectContent>
                       </Select>
                     )}

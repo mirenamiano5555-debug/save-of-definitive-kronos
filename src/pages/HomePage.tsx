@@ -64,7 +64,7 @@ export default function HomePage() {
               </div>
             </DialogContent>
           </Dialog>
-          {profile?.role === "director" && (
+          {(profile?.role === "director" || profile?.role === "admin") && (
             <Button variant="ghost" size="icon" onClick={() => navigate("/admin/users")} title={t("Administrar usuaris")}><Shield className="h-5 w-5" /></Button>
           )}
           <Button variant="ghost" size="icon" onClick={() => navigate("/tutorial")} title={t("Guia de funcions")}><HelpCircle className="h-5 w-5" /></Button>
