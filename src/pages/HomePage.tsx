@@ -41,7 +41,7 @@ export default function HomePage() {
             </DialogTrigger>
             <DialogContent aria-describedby="install-desc">
               <DialogHeader>
-                <DialogTitle className="font-serif">{t("Instal·lar Kronos al mòbil")}</DialogTitle>
+                <DialogTitle className="font-serif">{t("Instal·lar Kronos")}</DialogTitle>
                 <p id="install-desc" className="text-sm text-muted-foreground">{t("Segueix les instruccions per instal·lar l'app.")}</p>
               </DialogHeader>
               <div className="space-y-4">
@@ -59,6 +59,15 @@ export default function HomePage() {
                     <li>{t("Obre a Safari.")}</li>
                     <li>{t("Toca")} <span className="font-medium text-foreground">{t("compartir (⬆)")}</span>.</li>
                     <li>{t("Selecciona")} <span className="font-medium text-foreground">{t("\"Afegir a la pantalla d'inici\"")}</span>.</li>
+                  </ol>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">{t("Ordinador (Chrome)")}</h3>
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                    <li>{t("Obre")} <span className="font-medium text-foreground">kronos-arena.lovable.app</span> {t("Obre al Chrome.")}</li>
+                    <li>{t("Fes clic als tres punts (⋮) a dalt a la dreta.")}</li>
+                    <li>{t("Selecciona \"Desa i comparteix\" > \"Crea una drecera\".")}</li>
+                    <li>{t("Marca \"Obre com a finestra\" i fes clic a Crea.")}</li>
                   </ol>
                 </div>
               </div>
