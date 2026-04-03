@@ -7,7 +7,7 @@ import { AlertTriangle, CheckCircle, Search, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Issue {
-  type: "circular" | "contradiction" | "duplicate";
+  type: "circular" | "contradiction" | "duplicate" | "fill_cover";
   message: string;
   ues: string[];
   suggestion: string;
@@ -132,6 +132,51 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
       }
     }
 
+    // NEW: Fill implies covered-by check
+    // If UE A fills UE B (A.reomple_a contains B), then A must also be covered by
+    // all UEs that cover B (i.e., all UEs in B.cobreix_a should also appear in A.cobert_per)
+    for (const ue of ues) {
+      const codeA = ue.codi_ue || ue.id.slice(0, 8);
+      const fillsTargets = parseRelations(ue.reomple_a);
+      const coveredByA = parseRelations(ue.cobert_per);
+
+      for (const filledCode of fillsTargets) {
+        const filledUE = ueMap.get(filledCode);
+        if (!filledUE) continue;
+
+        // UEs that cover the filled UE (B.cobreix_a → who covers B? Actually we need who covers B = B.cobert_per)
+        // Wait: "cobreix_a" means "this UE covers X". So if C.cobreix_a contains B, then C covers B.
+        // We need: all UEs that cover B. That means: all C where C.cobreix_a contains B, OR equivalently B.cobert_per.
+        const covererCodes = parseRelations(filledUE.cobert_per);
+
+        for (const covererCode of covererCodes) {
+          if (covererCode === codeA) continue; // A itself covering B is fine
+          if (!coveredByA.includes(covererCode)) {
+            const covererUE = ueMap.get(covererCode);
+            foundIssues.push({
+              type: "fill_cover",
+              message: `${codeA} ${t("reomple")} ${filledCode}, ${t("però no està coberta per")} ${covererCode} (${t("que cobreix")} ${filledCode})`,
+              ues: [codeA, filledCode, covererCode],
+              suggestion: t("Si A reomple B, A ha d'estar coberta per les UEs que cobreixen B"),
+              fix: async () => {
+                // Add covererCode to A's cobert_per
+                const newCoveredBy = [...coveredByA, covererCode].join(", ");
+                await supabase.from("ues").update({ cobert_per: newCoveredBy } as any).eq("id", ue.id);
+                // Also add A to coverer's cobreix_a if not there
+                if (covererUE) {
+                  const covererCovers = parseRelations(covererUE.cobreix_a);
+                  if (!covererCovers.includes(codeA)) {
+                    const newCovers = [...covererCovers, codeA].join(", ");
+                    await supabase.from("ues").update({ cobreix_a: newCovers } as any).eq("id", covererUE.id);
+                  }
+                }
+              }
+            });
+          }
+        }
+      }
+    }
+
     const unique = foundIssues.filter((issue, i, arr) => arr.findIndex(x => x.message === issue.message) === i);
     setIssues(unique);
     setAnalyzed(true);
@@ -148,6 +193,13 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
     toast.success(`${fixable.length} ${t("incoherències corregides!")}`);
     setFixing(false);
     analyze();
+  };
+
+  const issueTypeLabel = (type: string) => {
+    if (type === "circular") return t("Bucle circular");
+    if (type === "contradiction") return t("Contradicció");
+    if (type === "fill_cover") return t("Reompliment sense cobertura");
+    return t("Inconsistència");
   };
 
   return (
@@ -178,7 +230,7 @@ export default function StratigraphicAnalysis({ jacimentId }: { jacimentId: stri
           <CardHeader className="pb-2 pt-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
-              {issue.type === "circular" ? t("Bucle circular") : issue.type === "contradiction" ? t("Contradicció") : t("Inconsistència")}
+              {issueTypeLabel(issue.type)}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-3 space-y-2">

@@ -79,7 +79,7 @@ export default function ProfilePage() {
         <div>
           <Label>{t("Rol")}</Label>
           <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted text-sm">
-            {t(role === "tecnic" ? "Tècnic" : role === "director" ? "Director" : "Visitant")}
+            {t(role === "admin" ? "Administrador" : role === "tecnic" ? "Tècnic" : role === "director" ? "Director" : "Visitant")}
           </div>
           <p className="text-xs text-muted-foreground mt-1">{t("Contacta un director per canviar el teu rol.")}</p>
         </div>
