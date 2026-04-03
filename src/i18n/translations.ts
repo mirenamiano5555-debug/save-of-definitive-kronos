@@ -435,6 +435,7 @@ const es: Record<string, string> = {
   "Administrar usuaris": "Administrar usuarios",
   "Sol·licituds pendents": "Solicitudes pendientes",
   "Usuaris de l'entitat": "Usuarios de la entidad",
+  "Tots els usuaris": "Todos los usuarios",
   "Vol ser:": "Quiere ser:",
   "Acceptar": "Aceptar",
   "Rebutjar": "Rechazar",
@@ -448,6 +449,22 @@ const es: Record<string, string> = {
   "Contacta un director per canviar el teu rol.": "Contacta a un director para cambiar tu rol.",
   "Accés immediat com a visitant (només lectura).": "Acceso inmediato como visitante (solo lectura).",
   "El teu registre haurà de ser aprovat per un director.": "Tu registro debe ser aprobado por un director.",
+  "Administrador": "Administrador",
+  "Només els administradors poden assignar aquest rol.": "Solo los administradores pueden asignar este rol.",
+
+  // Stratigraphic fill-cover
+  "reomple": "rellena",
+  "però no està coberta per": "pero no está cubierta por",
+  "que cobreix": "que cubre",
+  "Si A reomple B, A ha d'estar coberta per les UEs que cobreixen B": "Si A rellena B, A debe estar cubierta por las UEs que cubren B",
+  "Reompliment sense cobertura": "Relleno sin cobertura",
+
+  // Desktop install
+  "Ordinador (Chrome)": "Ordenador (Chrome)",
+  "Obre al Chrome.": "Abre en Chrome.",
+  "Fes clic als tres punts (⋮) a dalt a la dreta.": "Haz clic en los tres puntos (⋮) arriba a la derecha.",
+  "Selecciona \"Desa i comparteix\" > \"Crea una drecera\".": "Selecciona \"Guardar y compartir\" > \"Crear un acceso directo\".",
+  "Marca \"Obre com a finestra\" i fes clic a Crea.": "Marca \"Abrir como ventana\" y haz clic en Crear.",
 };
 
 const en: Record<string, string> = {
