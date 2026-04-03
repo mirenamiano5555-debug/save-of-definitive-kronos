@@ -892,6 +892,7 @@ const en: Record<string, string> = {
   "Administrar usuaris": "Manage users",
   "Sol·licituds pendents": "Pending requests",
   "Usuaris de l'entitat": "Entity users",
+  "Tots els usuaris": "All users",
   "Vol ser:": "Wants to be:",
   "Acceptar": "Accept",
   "Rebutjar": "Reject",
@@ -905,6 +906,22 @@ const en: Record<string, string> = {
   "Contacta un director per canviar el teu rol.": "Contact a director to change your role.",
   "Accés immediat com a visitant (només lectura).": "Immediate access as visitor (read-only).",
   "El teu registre haurà de ser aprovat per un director.": "Your registration must be approved by a director.",
+  "Administrador": "Administrator",
+  "Només els administradors poden assignar aquest rol.": "Only administrators can assign this role.",
+
+  // Stratigraphic fill-cover
+  "reomple": "fills",
+  "però no està coberta per": "but is not covered by",
+  "que cobreix": "which covers",
+  "Si A reomple B, A ha d'estar coberta per les UEs que cobreixen B": "If A fills B, A must be covered by the SUs that cover B",
+  "Reompliment sense cobertura": "Fill without coverage",
+
+  // Desktop install
+  "Ordinador (Chrome)": "Desktop (Chrome)",
+  "Obre al Chrome.": "Open in Chrome.",
+  "Fes clic als tres punts (⋮) a dalt a la dreta.": "Click the three dots (⋮) at the top right.",
+  "Selecciona \"Desa i comparteix\" > \"Crea una drecera\".": "Select \"Save and share\" > \"Create shortcut\".",
+  "Marca \"Obre com a finestra\" i fes clic a Crea.": "Check \"Open as window\" and click Create.",
 };
 
 const ca: Record<string, string> = {
