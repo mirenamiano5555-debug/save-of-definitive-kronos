@@ -517,6 +517,7 @@ const en: Record<string, string> = {
   "Filtres avançats a la cerca per trobar resultats precisos.": "Advanced search filters for precise results.",
   "Sistema de notificacions en temps real.": "Real-time notification system.",
   "Instal·lar Kronos al mòbil": "Install Kronos on mobile",
+  "Instal·lar Kronos": "Install Kronos",
   "Segueix les instruccions per instal·lar l'app.": "Follow the instructions to install the app.",
 
   // Search
