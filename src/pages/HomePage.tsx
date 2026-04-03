@@ -37,7 +37,7 @@ export default function HomePage() {
         <div className="flex items-center gap-1">
           <Dialog open={showInstall} onOpenChange={setShowInstall}>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" title={t("Instal·lar Kronos al mòbil")}><Smartphone className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" title={t("Instal·lar Kronos")}><Smartphone className="h-5 w-5" /></Button>
             </DialogTrigger>
             <DialogContent aria-describedby="install-desc">
               <DialogHeader>
