@@ -51,6 +51,7 @@ const es: Record<string, string> = {
   "Filtres avançats a la cerca per trobar resultats precisos.": "Filtros avanzados en la búsqueda para encontrar resultados precisos.",
   "Sistema de notificacions en temps real.": "Sistema de notificaciones en tiempo real.",
   "Instal·lar Kronos al mòbil": "Instalar Kronos en el móvil",
+  "Instal·lar Kronos": "Instalar Kronos",
   "Segueix les instruccions per instal·lar l'app.": "Sigue las instrucciones para instalar la app.",
   "Android (Chrome)": "Android (Chrome)",
   "Obre": "Abre",
