@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Node {
@@ -7,8 +7,6 @@ interface Node {
   x: number;
   y: number;
   level: number;
-  cotaSup: number | null;
-  cotaInf: number | null;
 }
 
 interface Edge {
@@ -17,7 +15,7 @@ interface Edge {
   type: string;
 }
 
-const RELATION_FIELDS = ["cobreix_a", "talla", "reomple_a"];
+const RELATION_LATER = ["cobreix_a", "talla", "reomple_a"];
 const COLORS: Record<string, string> = {
   cobreix_a: "#3b82f6",
   talla: "#ef4444",
@@ -38,9 +36,7 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    loadData();
-  }, [jacimentId]);
+  useEffect(() => { loadData(); }, [jacimentId]);
 
   const loadData = async () => {
     const { data: ues } = await supabase
@@ -50,153 +46,138 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
 
     if (!ues || ues.length === 0) return;
 
-    const codeMap = new Map<string, string>();
-    ues.forEach(ue => {
-      const code = ue.codi_ue || ue.id.slice(0, 8);
-      codeMap.set(code, ue.id);
-    });
-
-    const edgeList: Edge[] = [];
     const allCodes = ues.map(ue => ue.codi_ue || ue.id.slice(0, 8));
+    const codeSet = new Set(allCodes);
 
-    // Build cota map
-    const cotaMap = new Map<string, { sup: number | null; inf: number | null }>();
-    ues.forEach(ue => {
-      const code = ue.codi_ue || ue.id.slice(0, 8);
-      cotaMap.set(code, {
-        sup: (ue as any).cota_superior,
-        inf: (ue as any).cota_inferior,
-      });
-    });
-
+    // Build edges: "from" is LATER (above), "to" is EARLIER (below)
+    const edgeList: Edge[] = [];
     for (const ue of ues) {
       const code = ue.codi_ue || ue.id.slice(0, 8);
-      for (const rel of RELATION_FIELDS) {
+      for (const rel of RELATION_LATER) {
         const targets = parseRelations((ue as any)[rel]);
         for (const t of targets) {
-          if (allCodes.includes(t)) {
+          if (codeSet.has(t)) {
             edgeList.push({ from: code, to: t, type: rel });
           }
         }
       }
     }
 
-    // Sort by cota - highest cota_superior at top, lowest cota_inferior at bottom
-    // If no cota, fallback to topological sort
-    const hasCota = ues.some(ue => (ue as any).cota_superior != null || (ue as any).cota_inferior != null);
+    // Build adjacency for topological sort
+    // from (later/above) -> to (earlier/below)
+    // We need levels where level 0 = oldest (bottom), higher = more modern (top)
+    // nivel(UE) = 1 + max(nivel of all children "to")
+    const children = new Map<string, Set<string>>(); // code -> codes it sits ON TOP OF
+    const parents = new Map<string, Set<string>>();
+    allCodes.forEach(c => { children.set(c, new Set()); parents.set(c, new Set()); });
 
-    let nodeList: Node[];
-    const nodeWidth = 120;
+    for (const edge of edgeList) {
+      children.get(edge.from)?.add(edge.to);
+      parents.get(edge.to)?.add(edge.from);
+    }
 
-    if (hasCota) {
-      // Get global min/max cota
-      let globalMaxSup = -Infinity;
-      let globalMinInf = Infinity;
-      ues.forEach(ue => {
-        const sup = (ue as any).cota_superior;
-        const inf = (ue as any).cota_inferior;
-        if (sup != null && sup > globalMaxSup) globalMaxSup = sup;
-        if (inf != null && inf < globalMinInf) globalMinInf = inf;
-        if (sup != null && sup < globalMinInf) globalMinInf = sup;
-        if (inf != null && inf > globalMaxSup) globalMaxSup = inf;
-      });
-
-      if (globalMaxSup === -Infinity) globalMaxSup = 10;
-      if (globalMinInf === Infinity) globalMinInf = 0;
-      const range = globalMaxSup - globalMinInf || 1;
-      const totalHeight = 500;
-
-      // Sort UEs by average cota (descending = top)
-      const sorted = [...ues].sort((a, b) => {
-        const avgA = ((a as any).cota_superior ?? globalMaxSup) + ((a as any).cota_inferior ?? (a as any).cota_superior ?? globalMinInf);
-        const avgB = ((b as any).cota_superior ?? globalMaxSup) + ((b as any).cota_inferior ?? (b as any).cota_superior ?? globalMinInf);
-        return avgB - avgA;
-      });
-
-      // Group UEs at similar y positions to avoid overlap
-      nodeList = sorted.map((ue, i) => {
-        const code = ue.codi_ue || ue.id.slice(0, 8);
-        const sup = (ue as any).cota_superior ?? globalMaxSup;
-        const avgCota = ((sup) + ((ue as any).cota_inferior ?? sup)) / 2;
-        const y = ((globalMaxSup - avgCota) / range) * totalHeight;
-        const cota = cotaMap.get(code);
-        return {
-          id: code,
-          label: `${code}\n${cota?.sup != null ? `↑${cota.sup}` : ""}${cota?.inf != null ? ` ↓${cota.inf}` : ""}`,
-          x: (i % 5) * nodeWidth - (Math.min(sorted.length, 5) * nodeWidth) / 2 + nodeWidth / 2,
-          y,
-          level: 0,
-          cotaSup: cota?.sup ?? null,
-          cotaInf: cota?.inf ?? null,
-        };
-      });
-    } else {
-      // Fallback: topological sort
-      const adjacency = new Map<string, Set<string>>();
-      const inDegree = new Map<string, number>();
-      allCodes.forEach(c => { adjacency.set(c, new Set()); inDegree.set(c, 0); });
-
-      for (const edge of edgeList) {
-        adjacency.get(edge.from)?.add(edge.to);
-        inDegree.set(edge.to, (inDegree.get(edge.to) || 0) + 1);
+    // Calculate levels: level(n) = 1 + max(level of children), leaf = 0
+    const levels = new Map<string, number>();
+    const calcLevel = (code: string, visited: Set<string>): number => {
+      if (levels.has(code)) return levels.get(code)!;
+      if (visited.has(code)) return 0; // cycle protection
+      visited.add(code);
+      const kids = children.get(code) || new Set();
+      let maxChild = -1;
+      for (const kid of kids) {
+        maxChild = Math.max(maxChild, calcLevel(kid, visited));
       }
+      const lv = maxChild + 1;
+      levels.set(code, lv);
+      return lv;
+    };
 
-      const levels = new Map<string, number>();
-      const queue = allCodes.filter(c => (inDegree.get(c) || 0) === 0);
-      queue.forEach(c => levels.set(c, 0));
-      const visited = new Set<string>();
+    for (const code of allCodes) {
+      calcLevel(code, new Set());
+    }
 
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        if (visited.has(current)) continue;
-        visited.add(current);
-        const currentLevel = levels.get(current) || 0;
-        for (const neighbor of adjacency.get(current) || []) {
-          const newLevel = currentLevel + 1;
-          if (!levels.has(neighbor) || levels.get(neighbor)! < newLevel) levels.set(neighbor, newLevel);
-          inDegree.set(neighbor, (inDegree.get(neighbor) || 0) - 1);
-          if ((inDegree.get(neighbor) || 0) <= 0) queue.push(neighbor);
-        }
-      }
-      allCodes.forEach(c => { if (!levels.has(c)) levels.set(c, 0); });
+    // Group by level
+    const levelGroups = new Map<number, string[]>();
+    for (const [code, lv] of levels) {
+      if (!levelGroups.has(lv)) levelGroups.set(lv, []);
+      levelGroups.get(lv)!.push(code);
+    }
 
-      const levelGroups = new Map<number, string[]>();
-      for (const [code, level] of levels) {
-        if (!levelGroups.has(level)) levelGroups.set(level, []);
-        levelGroups.get(level)!.push(code);
-      }
+    // Sort levels descending (highest level = most modern = top of screen)
+    const sortedLevels = [...levelGroups.keys()].sort((a, b) => b - a);
+    const maxLevel = sortedLevels.length > 0 ? sortedLevels[0] : 0;
 
-      nodeList = [];
-      const levelHeight = 100;
-      for (const [level, codes] of levelGroups) {
-        const totalWidth = codes.length * nodeWidth;
-        const startX = -totalWidth / 2 + nodeWidth / 2;
-        codes.forEach((code, i) => {
-          const cota = cotaMap.get(code);
-          nodeList.push({
-            id: code, label: code,
-            x: startX + i * nodeWidth, y: level * levelHeight,
-            level, cotaSup: cota?.sup ?? null, cotaInf: cota?.inf ?? null,
-          });
+    // Reduce crossings: order nodes within each level based on median position of connected nodes
+    // Start from top, work down (Sugiyama-style barycenter heuristic)
+    const positionInLevel = new Map<string, number>();
+
+    // Initial ordering: just use the array order
+    for (const lv of sortedLevels) {
+      const codes = levelGroups.get(lv)!;
+      codes.forEach((c, i) => positionInLevel.set(c, i));
+    }
+
+    // Barycenter passes (2 passes down, 2 up)
+    for (let pass = 0; pass < 4; pass++) {
+      const order = pass % 2 === 0 ? sortedLevels : [...sortedLevels].reverse();
+      for (const lv of order) {
+        const codes = levelGroups.get(lv)!;
+        const barycenters = codes.map(code => {
+          const connected = pass % 2 === 0
+            ? [...(children.get(code) || [])]
+            : [...(parents.get(code) || [])];
+          if (connected.length === 0) return { code, bc: positionInLevel.get(code) || 0 };
+          const avg = connected.reduce((s, c) => s + (positionInLevel.get(c) || 0), 0) / connected.length;
+          return { code, bc: avg };
         });
+        barycenters.sort((a, b) => a.bc - b.bc);
+        const sorted = barycenters.map(b => b.code);
+        levelGroups.set(lv, sorted);
+        sorted.forEach((c, i) => positionInLevel.set(c, i));
       }
+    }
+
+    // Layout constants
+    const nodeW = 100;
+    const nodeH = 36;
+    const levelSpacingY = 90;
+    const nodeSpacingX = 130;
+
+    const nodeList: Node[] = [];
+    const levelY = new Map<number, number>();
+
+    for (let i = 0; i < sortedLevels.length; i++) {
+      const lv = sortedLevels[i];
+      const y = i * levelSpacingY;
+      levelY.set(lv, y);
+      const codes = levelGroups.get(lv)!;
+      const totalW = codes.length * nodeSpacingX;
+      const startX = -totalW / 2 + nodeSpacingX / 2;
+      codes.forEach((code, j) => {
+        nodeList.push({
+          id: code,
+          label: code,
+          x: startX + j * nodeSpacingX,
+          y,
+          level: lv,
+        });
+      });
     }
 
     setNodes(nodeList);
     setEdges(edgeList);
   };
 
-  useEffect(() => { draw(); }, [nodes, edges, pan, zoom]);
-
-  const draw = () => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = canvas.offsetWidth * 2;
-    canvas.height = canvas.offsetHeight * 2;
-    ctx.scale(2, 2);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
+    ctx.scale(dpr, dpr);
 
     const w = canvas.offsetWidth;
     const h = canvas.offsetHeight;
@@ -204,61 +185,77 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
     ctx.fillRect(0, 0, w, h);
 
     ctx.save();
-    ctx.translate(w / 2 + pan.x, 40 + pan.y);
+    ctx.translate(w / 2 + pan.x, 60 + pan.y);
     ctx.scale(zoom, zoom);
 
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    const nodeH = 36;
+
+    // Draw edges: strictly vertical or L-shaped (vertical + horizontal + vertical)
     for (const edge of edges) {
-      const fromNode = nodes.find(n => n.id === edge.from);
-      const toNode = nodes.find(n => n.id === edge.to);
+      const fromNode = nodeMap.get(edge.from);
+      const toNode = nodeMap.get(edge.to);
       if (!fromNode || !toNode) continue;
 
+      const color = COLORS[edge.type] || "#888";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.strokeStyle = COLORS[edge.type] || "#888";
-      ctx.lineWidth = 1.5;
-      ctx.moveTo(fromNode.x, fromNode.y + 15);
-      ctx.lineTo(toNode.x, toNode.y - 15);
+
+      const x1 = fromNode.x;
+      const y1 = fromNode.y + nodeH / 2; // bottom of "from" node
+      const x2 = toNode.x;
+      const y2 = toNode.y - nodeH / 2; // top of "to" node
+
+      if (Math.abs(x1 - x2) < 2) {
+        // Perfectly vertical
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      } else {
+        // L-shaped: go down halfway, then horizontal, then down
+        const midY = (y1 + y2) / 2;
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x1, midY);
+        ctx.lineTo(x2, midY);
+        ctx.lineTo(x2, y2);
+      }
       ctx.stroke();
 
-      const angle = Math.atan2(toNode.y - 15 - (fromNode.y + 15), toNode.x - fromNode.x);
-      const ax = toNode.x - 8 * Math.cos(angle);
-      const ay = toNode.y - 15 - 8 * Math.sin(angle);
+      // Arrowhead pointing down at toNode
+      const arrowSize = 6;
       ctx.beginPath();
-      ctx.moveTo(toNode.x, toNode.y - 15);
-      ctx.lineTo(ax - 5 * Math.sin(angle), ay + 5 * Math.cos(angle));
-      ctx.lineTo(ax + 5 * Math.sin(angle), ay - 5 * Math.cos(angle));
-      ctx.fillStyle = COLORS[edge.type] || "#888";
+      ctx.fillStyle = color;
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - arrowSize, y2 - arrowSize * 1.5);
+      ctx.lineTo(x2 + arrowSize, y2 - arrowSize * 1.5);
+      ctx.closePath();
       ctx.fill();
     }
 
+    // Draw nodes
+    const nodeW = 90;
     for (const node of nodes) {
-      ctx.fillStyle = "#f5f0e8";
+      // Box
+      ctx.fillStyle = "#fffbf0";
       ctx.strokeStyle = "#8b7355";
       ctx.lineWidth = 1.5;
-      const bw = 90, bh = 34;
       ctx.beginPath();
-      ctx.roundRect(node.x - bw / 2, node.y - bh / 2, bw, bh, 4);
+      ctx.roundRect(node.x - nodeW / 2, node.y - nodeH / 2, nodeW, nodeH, 5);
       ctx.fill();
       ctx.stroke();
 
+      // Label
       ctx.fillStyle = "#3d2e1f";
-      ctx.font = "bold 10px sans-serif";
+      ctx.font = "bold 11px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-
-      // Split label for cota display
-      const lines = node.label.split("\n");
-      if (lines.length > 1) {
-        ctx.fillText(lines[0], node.x, node.y - 6);
-        ctx.font = "8px sans-serif";
-        ctx.fillStyle = "#6b5c4a";
-        ctx.fillText(lines[1], node.x, node.y + 8);
-      } else {
-        ctx.fillText(node.label, node.x, node.y);
-      }
+      ctx.fillText(node.label, node.x, node.y);
     }
 
     ctx.restore();
-  };
+  }, [nodes, edges, pan, zoom]);
+
+  useEffect(() => { draw(); }, [draw]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsPanning(true);
@@ -271,7 +268,7 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    setZoom(z => Math.max(0.3, Math.min(3, z - e.deltaY * 0.001)));
+    setZoom(z => Math.max(0.2, Math.min(4, z - e.deltaY * 0.001)));
   };
 
   if (nodes.length === 0) {
@@ -287,7 +284,7 @@ export default function HarrisDiagram2D({ jacimentId }: { jacimentId: string }) 
       </div>
       <canvas
         ref={canvasRef}
-        className="w-full h-[400px] border border-border rounded-lg cursor-grab active:cursor-grabbing"
+        className="w-full h-[500px] border border-border rounded-lg cursor-grab active:cursor-grabbing"
         style={{ backgroundColor: "#f5f0e8" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
