@@ -27,20 +27,53 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     setSaving(true);
+
+    // Check if role changed
+    const roleChanged = role !== profile.role;
+
+    // Update basic profile fields (not role)
     const { error } = await supabase.from("profiles").update({
       full_name: fullName,
       entity,
       location,
       avatar_url: avatarUrl,
+      ...(roleChanged ? { requested_role: role as any } : {}),
     }).eq("user_id", user.id);
 
-    if (error) toast.error(error.message);
-    else {
-      toast.success(t("Perfil actualitzat!"));
-      await refreshProfile();
+    if (error) {
+      toast.error(error.message);
+      setSaving(false);
+      return;
     }
+
+    if (roleChanged) {
+      // Send notification to directors/admins of same entity
+      const { data: directors } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("entity", profile.entity)
+        .in("role", ["director", "admin"]);
+
+      if (directors && directors.length > 0) {
+        const notifications = directors.map((d) => ({
+          user_id: d.user_id,
+          title: t("Sol·licitud de canvi de rol"),
+          body: `${fullName || user.email} ${t("vol canviar el seu rol a")} ${role}`,
+          type: "user_approval",
+          link: "/admin/users",
+        }));
+        await supabase.from("notifications").insert(notifications);
+      }
+
+      toast.success(t("Sol·licitud de canvi de rol enviada. Un director o administrador l'haurà d'aprovar."));
+      setRole(profile.role); // Reset selector to current role
+    } else {
+      toast.success(t("Perfil actualitzat!"));
+    }
+
+    await refreshProfile();
     setSaving(false);
   };
 
