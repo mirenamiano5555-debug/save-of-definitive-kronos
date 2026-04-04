@@ -49,16 +49,26 @@ export default function ProfilePage() {
     }
 
     if (roleChanged) {
-      // Send notification to directors/admins of same entity
-      const { data: directors } = await supabase
+      // Send notification to directors of same entity + all admins
+      const { data: sameEntityManagers } = await supabase
         .from("profiles")
         .select("user_id")
         .eq("entity", profile.entity)
-        .in("role", ["director", "admin"]);
+        .in("role", ["director"]);
 
-      if (directors && directors.length > 0) {
-        const notifications = directors.map((d) => ({
-          user_id: d.user_id,
+      const { data: allAdmins } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      const recipientIds = new Set<string>();
+      sameEntityManagers?.forEach(d => recipientIds.add(d.user_id));
+      allAdmins?.forEach(d => recipientIds.add(d.user_id));
+      recipientIds.delete(user.id); // Don't notify self
+
+      if (recipientIds.size > 0) {
+        const notifications = Array.from(recipientIds).map((uid) => ({
+          user_id: uid,
           title: t("Sol·licitud de canvi de rol"),
           body: `${fullName || user.email} ${t("vol canviar el seu rol a")} ${role}`,
           type: "user_approval",
