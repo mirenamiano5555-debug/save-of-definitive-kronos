@@ -126,10 +126,10 @@ export default function ProfilePage() {
             </Select>
           )}
           {role !== profile?.role && (
-            <p className="text-xs text-amber-600 mt-1">{t("El canvi de rol requerirà aprovació d'un director o administrador.")}</p>
+            <p className="text-xs text-destructive mt-1">{t("El canvi de rol requerirà aprovació d'un director o administrador.")}</p>
           )}
           {profile?.requested_role && (
-            <p className="text-xs text-blue-600 mt-1">{t("Sol·licitud pendent")}: {t(profile.requested_role === "director" ? "Director" : profile.requested_role === "tecnic" ? "Tècnic" : "Visitant")}</p>
+            <p className="text-xs text-primary mt-1">{t("Sol·licitud pendent")}: {t(profile.requested_role === "director" ? "Director" : profile.requested_role === "tecnic" ? "Tècnic" : "Visitant")}</p>
           )}
         </div>
         <div>
