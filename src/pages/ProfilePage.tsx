@@ -27,20 +27,53 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     setSaving(true);
+
+    // Check if role changed
+    const roleChanged = role !== profile.role;
+
+    // Update basic profile fields (not role)
     const { error } = await supabase.from("profiles").update({
       full_name: fullName,
       entity,
       location,
       avatar_url: avatarUrl,
+      ...(roleChanged ? { requested_role: role as any } : {}),
     }).eq("user_id", user.id);
 
-    if (error) toast.error(error.message);
-    else {
-      toast.success(t("Perfil actualitzat!"));
-      await refreshProfile();
+    if (error) {
+      toast.error(error.message);
+      setSaving(false);
+      return;
     }
+
+    if (roleChanged) {
+      // Send notification to directors/admins of same entity
+      const { data: directors } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("entity", profile.entity)
+        .in("role", ["director", "admin"]);
+
+      if (directors && directors.length > 0) {
+        const notifications = directors.map((d) => ({
+          user_id: d.user_id,
+          title: t("Sol·licitud de canvi de rol"),
+          body: `${fullName || user.email} ${t("vol canviar el seu rol a")} ${role}`,
+          type: "user_approval",
+          link: "/admin/users",
+        }));
+        await supabase.from("notifications").insert(notifications);
+      }
+
+      toast.success(t("Sol·licitud de canvi de rol enviada. Un director o administrador l'haurà d'aprovar."));
+      setRole(profile.role); // Reset selector to current role
+    } else {
+      toast.success(t("Perfil actualitzat!"));
+    }
+
+    await refreshProfile();
     setSaving(false);
   };
 
@@ -78,10 +111,26 @@ export default function ProfilePage() {
         </div>
         <div>
           <Label>{t("Rol")}</Label>
-          <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted text-sm">
-            {t(role === "admin" ? "Administrador" : role === "tecnic" ? "Tècnic" : role === "director" ? "Director" : "Visitant")}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">{t("Contacta un director per canviar el teu rol.")}</p>
+          {profile?.role === "admin" ? (
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted text-sm">
+              {t("Administrador")}
+            </div>
+          ) : (
+            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="visitant">{t("Visitant")}</SelectItem>
+                <SelectItem value="tecnic">{t("Tècnic")}</SelectItem>
+                <SelectItem value="director">{t("Director")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {role !== profile?.role && (
+            <p className="text-xs text-destructive mt-1">{t("El canvi de rol requerirà aprovació d'un director o administrador.")}</p>
+          )}
+          {profile?.requested_role && (
+            <p className="text-xs text-primary mt-1">{t("Sol·licitud pendent")}: {t(profile.requested_role === "director" ? "Director" : profile.requested_role === "tecnic" ? "Tècnic" : "Visitant")}</p>
+          )}
         </div>
         <div>
           <Label>{t("Ubicació")}</Label>

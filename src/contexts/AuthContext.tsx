@@ -10,6 +10,8 @@ interface Profile {
   entity: string;
   role: "tecnic" | "director" | "visitant" | "admin";
   avatar_url: string | null;
+  requested_role: "tecnic" | "director" | "visitant" | "admin" | null;
+  approved: boolean;
 }
 
 interface AuthContextType {
