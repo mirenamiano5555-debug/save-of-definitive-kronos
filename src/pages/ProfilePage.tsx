@@ -111,10 +111,26 @@ export default function ProfilePage() {
         </div>
         <div>
           <Label>{t("Rol")}</Label>
-          <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted text-sm">
-            {t(role === "admin" ? "Administrador" : role === "tecnic" ? "Tècnic" : role === "director" ? "Director" : "Visitant")}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">{t("Contacta un director per canviar el teu rol.")}</p>
+          {profile?.role === "admin" ? (
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted text-sm">
+              {t("Administrador")}
+            </div>
+          ) : (
+            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="visitant">{t("Visitant")}</SelectItem>
+                <SelectItem value="tecnic">{t("Tècnic")}</SelectItem>
+                <SelectItem value="director">{t("Director")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {role !== profile?.role && (
+            <p className="text-xs text-amber-600 mt-1">{t("El canvi de rol requerirà aprovació d'un director o administrador.")}</p>
+          )}
+          {profile?.requested_role && (
+            <p className="text-xs text-blue-600 mt-1">{t("Sol·licitud pendent")}: {t(profile.requested_role === "director" ? "Director" : profile.requested_role === "tecnic" ? "Tècnic" : "Visitant")}</p>
+          )}
         </div>
         <div>
           <Label>{t("Ubicació")}</Label>
