@@ -85,12 +85,20 @@ export default function UserManagementPage() {
     fetchUsers();
   };
 
-  const handleReject = async (userId: string) => {
-    await supabase.from("profiles").update({
-      approved: true,
-      role: "visitant" as any,
-      requested_role: null,
-    }).eq("user_id", userId);
+  const handleReject = async (userId: string, isAlreadyApproved: boolean) => {
+    if (isAlreadyApproved) {
+      // Already approved user — just clear the request, keep current role
+      await supabase.from("profiles").update({
+        requested_role: null,
+      }).eq("user_id", userId);
+    } else {
+      // New user — set as visitant
+      await supabase.from("profiles").update({
+        approved: true,
+        role: "visitant" as any,
+        requested_role: null,
+      }).eq("user_id", userId);
+    }
 
     await supabase.from("notifications").insert({
       user_id: userId,
