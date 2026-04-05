@@ -466,6 +466,31 @@ const es: Record<string, string> = {
   "Fes clic als tres punts (⋮) a dalt a la dreta.": "Haz clic en los tres puntos (⋮) arriba a la derecha.",
   "Selecciona \"Desa i comparteix\" > \"Crea una drecera\".": "Selecciona \"Guardar y compartir\" > \"Crear un acceso directo\".",
   "Marca \"Obre com a finestra\" i fes clic a Crea.": "Marca \"Abrir como ventana\" y haz clic en Crear.",
+
+  // Password reset
+  "Has oblidat la contrasenya?": "¿Has olvidado la contraseña?",
+  "Restablir contrasenya": "Restablecer contraseña",
+  "Correu de restabliment enviat! Comprova la teva safata d'entrada.": "¡Correo de restablecimiento enviado! Comprueba tu bandeja de entrada.",
+  "Nova contrasenya": "Nueva contraseña",
+  "Mínim 6 caràcters": "Mínimo 6 caracteres",
+  "Contrasenya restablerta correctament!": "¡Contraseña restablecida correctamente!",
+  "La contrasenya ha de tenir almenys 6 caràcters": "La contraseña debe tener al menos 6 caracteres",
+  "Enviar": "Enviar",
+
+  // Export
+  "PDF exportat!": "¡PDF exportado!",
+  "Document exportat!": "¡Documento exportado!",
+
+  // Profile role change
+  "Sol·licitud de canvi de rol": "Solicitud de cambio de rol",
+  "vol canviar el seu rol a": "quiere cambiar su rol a",
+  "Sol·licitud de canvi de rol enviada. Un director o administrador l'haurà d'aprovar.": "Solicitud de cambio de rol enviada. Un director o administrador deberá aprobarla.",
+  "El canvi de rol requerirà aprovació d'un director o administrador.": "El cambio de rol requerirá la aprobación de un director o administrador.",
+  "Sol·licitud pendent": "Solicitud pendiente",
+
+  // Misc
+  "Sens nom": "Sin nombre",
+  "Nova sol·licitud d'usuari": "Nueva solicitud de usuario",
 };
 
 const en: Record<string, string> = {
@@ -924,6 +949,31 @@ const en: Record<string, string> = {
   "Fes clic als tres punts (⋮) a dalt a la dreta.": "Click the three dots (⋮) at the top right.",
   "Selecciona \"Desa i comparteix\" > \"Crea una drecera\".": "Select \"Save and share\" > \"Create shortcut\".",
   "Marca \"Obre com a finestra\" i fes clic a Crea.": "Check \"Open as window\" and click Create.",
+
+  // Password reset
+  "Has oblidat la contrasenya?": "Forgot your password?",
+  "Restablir contrasenya": "Reset password",
+  "Correu de restabliment enviat! Comprova la teva safata d'entrada.": "Reset email sent! Check your inbox.",
+  "Nova contrasenya": "New password",
+  "Mínim 6 caràcters": "Minimum 6 characters",
+  "Contrasenya restablerta correctament!": "Password reset successfully!",
+  "La contrasenya ha de tenir almenys 6 caràcters": "Password must be at least 6 characters",
+  "Enviar": "Send",
+
+  // Export
+  "PDF exportat!": "PDF exported!",
+  "Document exportat!": "Document exported!",
+
+  // Profile role change
+  "Sol·licitud de canvi de rol": "Role change request",
+  "vol canviar el seu rol a": "wants to change their role to",
+  "Sol·licitud de canvi de rol enviada. Un director o administrador l'haurà d'aprovar.": "Role change request sent. A director or administrator must approve it.",
+  "El canvi de rol requerirà aprovació d'un director o administrador.": "The role change will require approval from a director or administrator.",
+  "Sol·licitud pendent": "Pending request",
+
+  // Misc
+  "Sens nom": "No name",
+  "Nova sol·licitud d'usuari": "New user request",
 };
 
 const ca: Record<string, string> = {
