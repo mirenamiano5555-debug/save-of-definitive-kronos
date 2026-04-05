@@ -118,8 +118,8 @@ export default function UserManagementPage() {
     fetchUsers();
   };
 
-  const pendingUsers = users.filter(u => !u.approved && u.requested_role);
-  const approvedUsers = users.filter(u => u.approved);
+  const pendingUsers = users.filter(u => u.requested_role);
+  const approvedUsers = users.filter(u => u.approved && !u.requested_role);
 
   return (
     <div className="min-h-screen bg-background">
