@@ -161,7 +161,7 @@ export default function UserManagementPage() {
                       <Button size="sm" variant="default" onClick={() => handleApprove(u.user_id, u.requested_role!)}>
                         <Check className="h-4 w-4 mr-1" /> {t("Acceptar")}
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleReject(u.user_id)}>
+                      <Button size="sm" variant="destructive" onClick={() => handleReject(u.user_id, u.approved)}>
                         <X className="h-4 w-4 mr-1" /> {t("Rebutjar")}
                       </Button>
                     </div>
