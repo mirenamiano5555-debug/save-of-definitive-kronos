@@ -26,18 +26,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src={logoKronos} alt="Kronos" className="h-8 w-8 rounded" />
-          <h1 className="text-2xl font-serif font-bold text-primary">Kronos</h1>
-          <span className="text-sm text-muted-foreground hidden sm:inline">
+      <header className="border-b border-border bg-card px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0 shrink">
+          <img src={logoKronos} alt="Kronos" className="h-7 w-7 sm:h-8 sm:w-8 rounded shrink-0" />
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-primary shrink-0">Kronos</h1>
+          <span className="text-sm text-muted-foreground hidden md:inline truncate">
             {t("Benvingut/da,")} <span className="font-medium text-foreground">{profile?.full_name || profile?.entity || t("usuari")}</span>
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 flex-wrap justify-end">
           <Dialog open={showInstall} onOpenChange={setShowInstall}>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" title={t("Instal·lar Kronos")}><Smartphone className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title={t("Instal·lar Kronos")}><Smartphone className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
             </DialogTrigger>
             <DialogContent aria-describedby="install-desc">
               <DialogHeader>
@@ -74,13 +74,13 @@ export default function HomePage() {
             </DialogContent>
           </Dialog>
           {(profile?.role === "director" || profile?.role === "admin") && (
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin/users")} title={t("Administrar usuaris")}><Shield className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => navigate("/admin/users")} title={t("Administrar usuaris")}><Shield className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
           )}
-          <Button variant="ghost" size="icon" onClick={() => navigate("/tutorial")} title={t("Guia de funcions")}><HelpCircle className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:inline-flex" onClick={() => navigate("/tutorial")} title={t("Guia de funcions")}><HelpCircle className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
           <NotificationBell />
-          <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}><MessageSquare className="h-5 w-5" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}><User className="h-5 w-5" /></Button>
-          <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => navigate("/messages")}><MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => navigate("/profile")}><User className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:inline-flex" onClick={signOut}><LogOut className="h-4 w-4 sm:h-5 sm:w-5" /></Button>
         </div>
       </header>
 

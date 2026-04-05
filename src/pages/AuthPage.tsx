@@ -18,6 +18,8 @@ export default function AuthPage() {
   const [role, setRole] = useState<"tecnic" | "director" | "visitant">("tecnic");
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +48,19 @@ export default function AuthPage() {
     if (error) toast.error(error.message);
     else toast.success(t("Registre completat! Comprova el teu correu per verificar el compte."));
     setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) toast.error(error.message);
+    else toast.success(t("Correu de restabliment enviat! Comprova la teva safata d'entrada."));
+    setLoading(false);
+    setShowForgot(false);
   };
 
   return (
@@ -91,6 +106,16 @@ export default function AuthPage() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
 
+            {mode === "login" && (
+              <button
+                type="button"
+                className="text-sm text-primary hover:underline"
+                onClick={() => { setShowForgot(true); setForgotEmail(email); }}
+              >
+                {t("Has oblidat la contrasenya?")}
+              </button>
+            )}
+
             {mode === "register" && (
               <>
                 <div>
@@ -126,6 +151,29 @@ export default function AuthPage() {
             </Button>
           </form>
         </div>
+
+        {/* Forgot password dialog */}
+        {showForgot && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForgot(false)}>
+            <div className="bg-card border border-border rounded-lg p-6 shadow-lg w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-serif font-semibold text-lg mb-4">{t("Restablir contrasenya")}</h3>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <Label>{t("Correu electrònic")}</Label>
+                  <Input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowForgot(false)}>
+                    {t("Cancel·lar")}
+                  </Button>
+                  <Button type="submit" className="flex-1" disabled={loading}>
+                    {loading ? t("Carregant...") : t("Enviar")}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
