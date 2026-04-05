@@ -154,6 +154,7 @@ export default function UserManagementPage() {
                       <p className="font-medium truncate">{u.full_name || t("usuari")}</p>
                       <p className="text-xs text-muted-foreground truncate">{u.entity}</p>
                       <p className="text-sm text-muted-foreground">
+                        {u.approved && <><Badge variant="secondary" className="mr-1">{roleLabel(u.role)}</Badge> → </>}
                         {t("Vol ser:")} <Badge variant="outline">{roleLabel(u.requested_role || "")}</Badge>
                       </p>
                     </div>
