@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/contexts/LanguageContext";
 import jsPDF from "jspdf";
 
 interface MassExportProps {
@@ -9,6 +10,7 @@ interface MassExportProps {
 }
 
 export default function MassExport({ items, type }: MassExportProps) {
+  const { t } = useT();
   if (items.length === 0) return null;
 
   const exportAllPDF = () => {
@@ -62,12 +64,12 @@ export default function MassExport({ items, type }: MassExportProps) {
     }
 
     doc.save(`exportacio_${type}_${Date.now()}.pdf`);
-    toast.success(`${items.length} fitxes exportades!`);
+    toast.success(`${items.length} ${t("fitxes exportades!")}`);
   };
 
   return (
     <Button variant="outline" size="sm" onClick={exportAllPDF} className="h-7 px-2 text-xs gap-1">
-      <FileDown className="h-3 w-3" /> Exportar {items.length} fitxes (PDF)
+      <FileDown className="h-3 w-3" /> {t("Exportar")} {items.length} {t("fitxes (PDF)")}
     </Button>
   );
 }
