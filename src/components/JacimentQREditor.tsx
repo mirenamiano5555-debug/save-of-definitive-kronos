@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -131,6 +132,7 @@ function renderQRToImage(url: string, pixelSize: number): Promise<HTMLImageEleme
 }
 
 export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREditorProps) {
+  const { t } = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [objectes, setObjectes] = useState<any[]>([]);
@@ -369,7 +371,7 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
   const addQR = async (obj: any) => {
     const existing = placedQRs.find((q) => q.id === obj.id);
     if (existing) {
-      toast.error("Aquest objecte ja té un QR col·locat");
+      toast.error(t("Aquest objecte ja té un QR col·locat"));
       return;
     }
 
@@ -390,10 +392,10 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
         },
       ]);
       setShowSearch(false);
-      toast.success(`QR funcional de "${obj.name}" afegit`);
+      toast.success(`QR "${obj.name}" ${t("afegit")}`);
     } catch (err) {
       console.error("Error generating QR:", err);
-      toast.error("Error generant el QR");
+      toast.error(t("Error generant el QR"));
     }
   };
 
@@ -424,9 +426,9 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
       .update({ qr_layout: layoutData } as any)
       .eq("id", jacimentId);
     if (error) {
-      toast.error("Error desant la disposició");
+      toast.error(t("Error desant la disposició"));
     } else {
-      toast.success("Disposició dels QRs desada!");
+      toast.success(t("Disposició dels QRs desada!"));
     }
     setSaving(false);
   };
@@ -472,7 +474,7 @@ export default function JacimentQREditor({ jacimentId, imageUrl }: JacimentQREdi
     link.download = `jaciment-qr-${jacimentId.slice(0, 8)}.png`;
     link.href = exportCanvas.toDataURL("image/png");
     link.click();
-    toast.success("Imatge amb QRs funcionals exportada!");
+    toast.success(t("Imatge amb QRs funcionals exportada!"));
   };
 
   if (!imageUrl) {

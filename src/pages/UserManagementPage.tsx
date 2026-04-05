@@ -85,12 +85,20 @@ export default function UserManagementPage() {
     fetchUsers();
   };
 
-  const handleReject = async (userId: string) => {
-    await supabase.from("profiles").update({
-      approved: true,
-      role: "visitant" as any,
-      requested_role: null,
-    }).eq("user_id", userId);
+  const handleReject = async (userId: string, isAlreadyApproved: boolean) => {
+    if (isAlreadyApproved) {
+      // Already approved user — just clear the request, keep current role
+      await supabase.from("profiles").update({
+        requested_role: null,
+      }).eq("user_id", userId);
+    } else {
+      // New user — set as visitant
+      await supabase.from("profiles").update({
+        approved: true,
+        role: "visitant" as any,
+        requested_role: null,
+      }).eq("user_id", userId);
+    }
 
     await supabase.from("notifications").insert({
       user_id: userId,
@@ -118,8 +126,8 @@ export default function UserManagementPage() {
     fetchUsers();
   };
 
-  const pendingUsers = users.filter(u => !u.approved && u.requested_role);
-  const approvedUsers = users.filter(u => u.approved);
+  const pendingUsers = users.filter(u => u.requested_role);
+  const approvedUsers = users.filter(u => u.approved && !u.requested_role);
 
   return (
     <div className="min-h-screen bg-background">
@@ -146,6 +154,7 @@ export default function UserManagementPage() {
                       <p className="font-medium truncate">{u.full_name || t("usuari")}</p>
                       <p className="text-xs text-muted-foreground truncate">{u.entity}</p>
                       <p className="text-sm text-muted-foreground">
+                        {u.approved && <><Badge variant="secondary" className="mr-1">{roleLabel(u.role)}</Badge> → </>}
                         {t("Vol ser:")} <Badge variant="outline">{roleLabel(u.requested_role || "")}</Badge>
                       </p>
                     </div>
@@ -153,7 +162,7 @@ export default function UserManagementPage() {
                       <Button size="sm" variant="default" onClick={() => handleApprove(u.user_id, u.requested_role!)}>
                         <Check className="h-4 w-4 mr-1" /> {t("Acceptar")}
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleReject(u.user_id)}>
+                      <Button size="sm" variant="destructive" onClick={() => handleReject(u.user_id, u.approved)}>
                         <X className="h-4 w-4 mr-1" /> {t("Rebutjar")}
                       </Button>
                     </div>

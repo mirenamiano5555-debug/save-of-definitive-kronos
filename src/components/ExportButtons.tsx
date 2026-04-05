@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { FileText, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/contexts/LanguageContext";
 import jsPDF from "jspdf";
 
 interface ExportField {
@@ -104,7 +105,7 @@ function generateFitxaPDF(title: string, fields: ExportField[], type: string) {
   }
 
   doc.save(`${fitxaTitle.replace(/\s+/g, "_")}_${title.replace(/\s+/g, "_")}.pdf`);
-  toast.success("PDF exportat!");
+  toast.success("PDF exportat!"); // Note: this runs outside component, no t() available here
 }
 
 function generateDocContent(title: string, fields: ExportField[], type?: string): string {
@@ -147,6 +148,7 @@ function generateDocContent(title: string, fields: ExportField[], type?: string)
 }
 
 export default function ExportButtons({ title, fields, variant = "default", type }: ExportButtonsProps) {
+  const { t } = useT();
   const exportPDF = () => {
     if (variant === "fitxa" && type) {
       generateFitxaPDF(title, fields, type);
@@ -171,7 +173,7 @@ export default function ExportButtons({ title, fields, variant = "default", type
         });
 
       doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
-      toast.success("PDF exportat!");
+      toast.success(t("PDF exportat!"));
     }
   };
 
@@ -184,7 +186,7 @@ export default function ExportButtons({ title, fields, variant = "default", type
     link.download = `${title.replace(/\s+/g, "_")}.doc`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success("Document exportat!");
+    toast.success(t("Document exportat!"));
   };
 
   return (

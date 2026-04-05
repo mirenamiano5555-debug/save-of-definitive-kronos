@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/LanguageContext";
 import { Eraser, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -94,6 +95,8 @@ export default function SketchPad({ value, onChange, folder = "croquis" }: Sketc
     ctx.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
   };
 
+  const { t } = useT();
+
   const saveSketch = async () => {
     if (!user || !canvasRef.current) return;
     setSaving(true);
@@ -101,10 +104,10 @@ export default function SketchPad({ value, onChange, folder = "croquis" }: Sketc
       if (!blob) { setSaving(false); return; }
       const path = `${user.id}/${folder}/${Date.now()}.png`;
       const { error } = await supabase.storage.from("images").upload(path, blob, { contentType: "image/png" });
-      if (error) { toast.error("Error guardant croquis"); setSaving(false); return; }
+      if (error) { toast.error(t("Error guardant croquis")); setSaving(false); return; }
       const { data } = supabase.storage.from("images").getPublicUrl(path);
       onChange(data.publicUrl);
-      toast.success("Croquis guardat!");
+      toast.success(t("Croquis guardat!"));
       setSaving(false);
     }, "image/png");
   };

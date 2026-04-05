@@ -24,6 +24,7 @@ import MapPage from "./pages/MapPage";
 import AIAssistantPage from "./pages/AIAssistantPage";
 import TutorialPage from "./pages/TutorialPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 const AppRoutes = () => (
   <Routes>
     <Route path="/auth" element={<AuthRoute><AuthPage /></AuthRoute>} />
+    <Route path="/reset-password" element={<ResetPasswordPage />} />
     <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
     <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
     <Route path="/upload/jaciment" element={<ProtectedRoute><JacimentForm /></ProtectedRoute>} />
