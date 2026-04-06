@@ -427,6 +427,36 @@ function buildTools() {
   ];
 }
 
+async function uploadImageFromUrl(supabase: any, userId: string, imageUrl: string): Promise<string | null> {
+  if (!imageUrl) return null;
+  // If already a Supabase storage URL, keep it
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  if (imageUrl.includes(supabaseUrl)) return imageUrl;
+  
+  try {
+    const resp = await fetch(imageUrl);
+    if (!resp.ok) return imageUrl; // fallback to original
+    const contentType = resp.headers.get("content-type") || "image/jpeg";
+    if (!contentType.startsWith("image/")) return imageUrl;
+    
+    const blob = await resp.blob();
+    const ext = contentType.split("/")[1]?.split(";")[0] || "jpg";
+    const path = `${userId}/ai-uploads/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+    
+    const { error } = await supabase.storage.from("images").upload(path, blob, { contentType, upsert: false });
+    if (error) {
+      console.error("Storage upload error:", error.message);
+      return imageUrl;
+    }
+    
+    const { data } = supabase.storage.from("images").getPublicUrl(path);
+    return data.publicUrl;
+  } catch (e) {
+    console.error("Image download error:", e);
+    return imageUrl;
+  }
+}
+
 async function executeToolCall(supabase: any, userId: string, name: string, args: any, userRoles: any[]) {
   const isDirector = userRoles.some((r: any) => r.role === "director" || r.role === "admin");
 
