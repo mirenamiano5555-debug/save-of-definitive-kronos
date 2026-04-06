@@ -421,7 +421,7 @@ export default function AIAssistantPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,.pdf,.doc,.docx,.txt,.csv"
+            accept="image/*"
             multiple
             className="hidden"
             onChange={handleFileUpload}
