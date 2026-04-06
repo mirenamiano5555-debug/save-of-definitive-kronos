@@ -18,15 +18,15 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant
 function getWelcomeMsg(lang: string): Msg {
   if (lang === "es") return {
     role: "assistant",
-    content: "¡Hola! Soy el asistente IA de Kronos. Puedo ayudarte con:\n\n- **Consultar datos** de yacimientos, UEs y objetos\n- **Crear registros** automáticamente\n- **Analizar imágenes** que me adjuntes\n- **Procesar PDFs** y documentos\n- **Generar datos plausibles** si lo necesitas\n- **Responder preguntas** sobre arqueología\n\n📎 Puedes adjuntar imágenes y documentos con el botón de clip.\n\n¿Qué necesitas?"
+    content: "¡Hola! Soy el asistente IA de Kronos. Puedo ayudarte con:\n\n- **Consultar datos** de yacimientos, UEs y objetos\n- **Crear, editar y eliminar** registros automáticamente\n- **Analizar imágenes** que me adjuntes (identificar cerámica, lítica, etc.)\n- **Generar resúmenes** completos de yacimientos\n- **Sugerir relaciones** estratigráficas que falten\n- **Buscar ítems** por criterios (tipo, cronología, etc.)\n- **Generar datos plausibles** si lo necesitas\n\n📎 Puedes adjuntar imágenes con el botón de clip.\n\n¿Qué necesitas?"
   };
   if (lang === "en") return {
     role: "assistant",
-    content: "Hello! I'm Kronos' AI assistant. I can help you with:\n\n- **Query data** from sites, SUs and objects\n- **Create records** automatically\n- **Analyze images** you attach\n- **Process PDFs** and documents\n- **Generate plausible data** if needed\n- **Answer questions** about archaeology\n\n📎 You can attach images and documents with the clip button.\n\nWhat do you need?"
+    content: "Hello! I'm Kronos' AI assistant. I can help you with:\n\n- **Query data** from sites, SUs and objects\n- **Create, edit and delete** records automatically\n- **Analyze images** you attach (identify pottery, lithics, etc.)\n- **Generate summaries** of entire sites\n- **Suggest relationships** that might be missing\n- **Search items** by criteria (type, chronology, etc.)\n- **Generate plausible data** if needed\n\n📎 You can attach images with the clip button.\n\nWhat do you need?"
   };
   return {
     role: "assistant",
-    content: "Hola! Sóc l'assistent IA de Kronos. Puc ajudar-te amb:\n\n- **Consultar dades** de jaciments, UEs i objectes\n- **Crear registres** automàticament\n- **Analitzar imatges** que m'adjuntis\n- **Processar PDFs** i documents\n- **Generar dades plausibles** si ho necessites\n- **Respondre preguntes** sobre arqueologia\n\n📎 Pots adjuntar imatges i documents usant el botó de clip.\n\nQuè necessites?"
+    content: "Hola! Sóc l'assistent IA de Kronos. Puc ajudar-te amb:\n\n- **Consultar dades** de jaciments, UEs i objectes\n- **Crear, editar i eliminar** registres automàticament\n- **Analitzar imatges** que m'adjuntis (identificar ceràmica, lítica, etc.)\n- **Generar resums** complets de jaciments\n- **Suggerir relacions** estratigràfiques que faltin\n- **Cercar ítems** per criteris (tipus, cronologia, etc.)\n- **Generar dades plausibles** si ho necessites\n\n📎 Pots adjuntar imatges usant el botó de clip.\n\nQuè necessites?"
   };
 }
 
@@ -421,7 +421,7 @@ export default function AIAssistantPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,.pdf,.doc,.docx,.txt,.csv"
+            accept="image/*"
             multiple
             className="hidden"
             onChange={handleFileUpload}
