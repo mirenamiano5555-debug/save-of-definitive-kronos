@@ -462,10 +462,11 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
 
   switch (name) {
     case "create_jaciment": {
+      const resolvedImage = await uploadImageFromUrl(supabase, userId, args.image_url);
       const { data, error } = await supabase.from("jaciments").insert({
         created_by: userId, name: args.name, period: args.period || null,
         description: args.description || null, latitude: args.latitude || null,
-        longitude: args.longitude || null, image_url: args.image_url || null,
+        longitude: args.longitude || null, image_url: resolvedImage,
       }).select().single();
       if (error) throw new Error(error.message);
       return { success: true, jaciment: data, message: `Jaciment "${data.name}" creat. Enllaç: /jaciment/${data.id}` };
@@ -473,6 +474,7 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
 
     case "update_jaciment": {
       const { id, ...updates } = args;
+      if (updates.image_url) updates.image_url = await uploadImageFromUrl(supabase, userId, updates.image_url);
       const cleanUpdates: any = {};
       for (const [k, v] of Object.entries(updates)) { if (v !== undefined) cleanUpdates[k] = v; }
       if (Object.keys(cleanUpdates).length === 0) return { error: "Cap camp a actualitzar" };
