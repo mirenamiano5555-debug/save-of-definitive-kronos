@@ -427,15 +427,46 @@ function buildTools() {
   ];
 }
 
+async function uploadImageFromUrl(supabase: any, userId: string, imageUrl: string): Promise<string | null> {
+  if (!imageUrl) return null;
+  // If already a Supabase storage URL, keep it
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  if (imageUrl.includes(supabaseUrl)) return imageUrl;
+  
+  try {
+    const resp = await fetch(imageUrl);
+    if (!resp.ok) return imageUrl; // fallback to original
+    const contentType = resp.headers.get("content-type") || "image/jpeg";
+    if (!contentType.startsWith("image/")) return imageUrl;
+    
+    const blob = await resp.blob();
+    const ext = contentType.split("/")[1]?.split(";")[0] || "jpg";
+    const path = `${userId}/ai-uploads/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+    
+    const { error } = await supabase.storage.from("images").upload(path, blob, { contentType, upsert: false });
+    if (error) {
+      console.error("Storage upload error:", error.message);
+      return imageUrl;
+    }
+    
+    const { data } = supabase.storage.from("images").getPublicUrl(path);
+    return data.publicUrl;
+  } catch (e) {
+    console.error("Image download error:", e);
+    return imageUrl;
+  }
+}
+
 async function executeToolCall(supabase: any, userId: string, name: string, args: any, userRoles: any[]) {
   const isDirector = userRoles.some((r: any) => r.role === "director" || r.role === "admin");
 
   switch (name) {
     case "create_jaciment": {
+      const resolvedImage = await uploadImageFromUrl(supabase, userId, args.image_url);
       const { data, error } = await supabase.from("jaciments").insert({
         created_by: userId, name: args.name, period: args.period || null,
         description: args.description || null, latitude: args.latitude || null,
-        longitude: args.longitude || null, image_url: args.image_url || null,
+        longitude: args.longitude || null, image_url: resolvedImage,
       }).select().single();
       if (error) throw new Error(error.message);
       return { success: true, jaciment: data, message: `Jaciment "${data.name}" creat. Enllaç: /jaciment/${data.id}` };
@@ -443,6 +474,7 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
 
     case "update_jaciment": {
       const { id, ...updates } = args;
+      if (updates.image_url) updates.image_url = await uploadImageFromUrl(supabase, userId, updates.image_url);
       const cleanUpdates: any = {};
       for (const [k, v] of Object.entries(updates)) { if (v !== undefined) cleanUpdates[k] = v; }
       if (Object.keys(cleanUpdates).length === 0) return { error: "Cap camp a actualitzar" };
@@ -474,6 +506,7 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
       const insertData: any = { created_by: userId, jaciment_id: args.jaciment_id };
       const ueFields = ["codi_ue","descripcio","cronologia","cota_superior","cota_inferior","color","sediment","interpretacio","image_url","cobreix_a","cobert_per","talla","tallat_per","reomple_a","reomplert_per","es_recolza_a","se_li_recolza","igual_a"];
       for (const f of ueFields) { if (args[f] !== undefined) insertData[f] = args[f]; }
+      if (insertData.image_url) insertData.image_url = await uploadImageFromUrl(supabase, userId, insertData.image_url);
       const { data, error } = await supabase.from("ues").insert(insertData).select().single();
       if (error) throw new Error(error.message);
       return { success: true, ue: data, message: `UE "${data.codi_ue || data.id}" creada. Enllaç: /ue/${data.id}` };
@@ -481,6 +514,7 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
 
     case "update_ue": {
       const { id, ...updates } = args;
+      if (updates.image_url) updates.image_url = await uploadImageFromUrl(supabase, userId, updates.image_url);
       const cleanUpdates: any = {};
       for (const [k, v] of Object.entries(updates)) { if (v !== undefined) cleanUpdates[k] = v; }
       if (Object.keys(cleanUpdates).length === 0) return { error: "Cap camp a actualitzar" };
@@ -506,10 +540,11 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
     }
 
     case "create_objecte": {
+      const resolvedObjImage = await uploadImageFromUrl(supabase, userId, args.image_url);
       const { data, error } = await supabase.from("objectes").insert({
         created_by: userId, jaciment_id: args.jaciment_id, name: args.name,
         object_id: args.object_id, tipus: args.tipus || null,
-        ue_id: args.ue_id || null, image_url: args.image_url || null,
+        ue_id: args.ue_id || null, image_url: resolvedObjImage,
       }).select().single();
       if (error) throw new Error(error.message);
       return { success: true, objecte: data, message: `Objecte "${data.name}" creat. Enllaç: /objecte/${data.id}` };
@@ -517,6 +552,7 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
 
     case "update_objecte": {
       const { id, ...updates } = args;
+      if (updates.image_url) updates.image_url = await uploadImageFromUrl(supabase, userId, updates.image_url);
       const cleanUpdates: any = {};
       for (const [k, v] of Object.entries(updates)) { if (v !== undefined) cleanUpdates[k] = v; }
       if (Object.keys(cleanUpdates).length === 0) return { error: "Cap camp a actualitzar" };

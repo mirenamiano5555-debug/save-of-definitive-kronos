@@ -73,6 +73,30 @@ export type Database = {
           },
         ]
       }
+      banned_emails: {
+        Row: {
+          banned_at: string
+          banned_by: string
+          email: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          banned_at?: string
+          banned_by: string
+          email: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string
+          email?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       change_logs: {
         Row: {
           changes: Json
