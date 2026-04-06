@@ -506,6 +506,7 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
       const insertData: any = { created_by: userId, jaciment_id: args.jaciment_id };
       const ueFields = ["codi_ue","descripcio","cronologia","cota_superior","cota_inferior","color","sediment","interpretacio","image_url","cobreix_a","cobert_per","talla","tallat_per","reomple_a","reomplert_per","es_recolza_a","se_li_recolza","igual_a"];
       for (const f of ueFields) { if (args[f] !== undefined) insertData[f] = args[f]; }
+      if (insertData.image_url) insertData.image_url = await uploadImageFromUrl(supabase, userId, insertData.image_url);
       const { data, error } = await supabase.from("ues").insert(insertData).select().single();
       if (error) throw new Error(error.message);
       return { success: true, ue: data, message: `UE "${data.codi_ue || data.id}" creada. Enllaç: /ue/${data.id}` };
@@ -513,6 +514,7 @@ async function executeToolCall(supabase: any, userId: string, name: string, args
 
     case "update_ue": {
       const { id, ...updates } = args;
+      if (updates.image_url) updates.image_url = await uploadImageFromUrl(supabase, userId, updates.image_url);
       const cleanUpdates: any = {};
       for (const [k, v] of Object.entries(updates)) { if (v !== undefined) cleanUpdates[k] = v; }
       if (Object.keys(cleanUpdates).length === 0) return { error: "Cap camp a actualitzar" };
